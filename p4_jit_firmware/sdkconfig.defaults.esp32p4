@@ -1,26 +1,97 @@
 # This file was generated using idf.py save-defconfig. It can be edited manually.
 # Espressif IoT Development Framework (ESP-IDF) 5.4.0 Project Minimal Configuration
-#
+
+# ------------------------------------------------------------------------------
+# Target Configuration
+# ------------------------------------------------------------------------------
+# Specifies the target chip is ESP32-P4. This ensures correct drivers,
+# memory map, and compiler flags are used for this specific architecture.
 CONFIG_IDF_TARGET="esp32p4"
+
+# ------------------------------------------------------------------------------
+# Flash Memory Settings
+# ------------------------------------------------------------------------------
+# Uses Quad I/O (4 data lines) for flash communication.
+# This is the fastest mode for booting and loading code.
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+
+# Specifies the physical flash size is 16MB.
+# Used to verify that partition tables fit within the device.
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+
+# ------------------------------------------------------------------------------
+# Partition Table
+# ------------------------------------------------------------------------------
+# Use a custom partition table instead of the default.
+# Allows defining large application partitions or specific data areas.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ------------------------------------------------------------------------------
+# External RAM (PSRAM) Configuration
+# ------------------------------------------------------------------------------
+# Enables support for external PSRAM chip.
 CONFIG_SPIRAM=y
+
+# Runs PSRAM at 200MHz (max speed).
+# Critical for performance when JIT code/data is in external memory.
 CONFIG_SPIRAM_SPEED_200M=y
+
+# ------------------------------------------------------------------------------
+# Cache Configuration
+# ------------------------------------------------------------------------------
+# Allocates 256KB of internal memory for L2 Cache.
+# Speeds up access to external Flash and PSRAM significantly.
 CONFIG_CACHE_L2_CACHE_256KB=y
+
+# Sets cache line size to 128 Bytes.
+# Larger lines are better for sequential access (like audio buffers).
 CONFIG_CACHE_L2_CACHE_LINE_128B=y
+
+# ------------------------------------------------------------------------------
+# System Safety & Debugging (Watchdogs)
+# ------------------------------------------------------------------------------
+# Disables using RTC Fast Memory as general heap.
 CONFIG_ESP_SYSTEM_ALLOW_RTC_FAST_MEM_AS_HEAP=n
+
+# Disable Interrupt Watchdog.
+# Prevents resets if an interrupt is blocked for too long (useful for debugging hangs).
 CONFIG_ESP_INT_WDT=n
+
+# Disable Task Watchdog.
+# Prevents resets if a task loops forever without yielding.
+# ESSENTIAL for JIT debugging so you can inspect the state if code hangs.
 CONFIG_ESP_TASK_WDT_EN=n
+
+# Enables experimental features in IDF.
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 
+# ------------------------------------------------------------------------------
+# Memory Protection & JIT Execution (CRITICAL)
+# ------------------------------------------------------------------------------
+# Disable the strict split between Instruction RAM (IRAM) and Data RAM (DRAM).
+# Default is 'y', which marks internal data memory (L2MEM) as Non-Executable.
+# Setting to 'n' UNLOCKS execution from L2MEM (0x4FF...), fixing the crash.
+CONFIG_ESP_SYSTEM_PMP_IDRAM_SPLIT=n
+
+# Explicitly enables Execute-In-Place (XIP) from PSRAM.
+# Required to run code located in external memory via the cache.
+CONFIG_SOC_SPIRAM_XIP_SUPPORTED=y
+
+# ------------------------------------------------------------------------------
+# USB / Serial Communication
+# ------------------------------------------------------------------------------
+# Enables the TinyUSB stack for USB communication.
 CONFIG_TINYUSB_CDC_ENABLED=y
+
+# Number of CDC (Serial) ports to expose.
 CONFIG_TINYUSB_CDC_COUNT=1
 
-
-# CDC FIFO sizes / x2 transfer speed (less cpu interruptions)
+# Buffer sizes for USB Serial (CDC).
+# 2KB buffers help prevent data loss during high-speed transfers.
 CONFIG_TINYUSB_CDC_RX_BUFSIZE=2048
 CONFIG_TINYUSB_CDC_TX_BUFSIZE=2048
 CONFIG_TINYUSB_CDC_EP_BUFSIZE=2048
+
+# USB Debug level (0 = Errors only).
 CONFIG_TINYUSB_DEBUG_LEVEL=0

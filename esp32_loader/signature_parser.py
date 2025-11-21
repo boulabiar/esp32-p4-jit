@@ -1,17 +1,33 @@
 import re
 import os
 import sys
-from pycparser import c_parser, c_ast, parse_file
-
+from pycparser import c_parser, c_ast
 
 class SignatureParser:
     """
     Parses C source files to extract function signatures using pycparser.
+    Uses a regex heuristic to extract the function definition line and 
+    prepends standard typedefs from a config file to ensure parsing success.
     """
     
     def __init__(self, source_file):
         self.source_file = source_file
+        self.current_function = None
+        self.std_types = self._load_std_types()
         
+    def _load_std_types(self):
+        """Load standard typedefs from config file."""
+        # Assuming config is at ../config/std_types.h relative to this file
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_path = os.path.join(base_dir, 'config', 'std_types.h')
+        
+        try:
+            with open(config_path, 'r') as f:
+                return f.read()
+        except FileNotFoundError:
+            print(f"Warning: Standard types config not found at {config_path}")
+            return ""
+
     def parse_function(self, function_name):
         """
         Parse function signature from source file.
@@ -22,104 +38,124 @@ class SignatureParser:
         Returns:
             dict: Function signature details
         """
+        self.current_function = function_name
+        
         with open(self.source_file, 'r') as f:
             source_code = f.read()
-        
-        # Preprocess: Remove directives for pycparser
-        # pycparser doesn't support #include, #define, etc.
-        # We strip them but keep newlines to preserve line numbers
-        clean_source = re.sub(r'^\s*#.*$', '', source_code, flags=re.MULTILINE)
-        
-        # Remove comments
-        clean_source = self._remove_comments(clean_source)
             
+        # Extract the signature string using regex heuristic
+        signature_str = self._extract_signature_string(source_code, function_name)
+        
+        if not signature_str:
+             raise ValueError(f"Function '{function_name}' not found in {self.source_file}")
+             
+        # Combine standard types and the extracted signature
+        full_code = self.std_types + "\n" + signature_str
+        
+        # Save for debugging
+        self._save_debug_output(full_code)
+        
+        # Parse with pycparser
+        parser = c_parser.CParser()
         try:
-            # Try parsing the cleaned source
-            ast = self._parse_with_fake_headers(clean_source)
+            ast = parser.parse(full_code, filename='<extracted_signature>')
         except Exception as e:
-            # Fallback to original behavior (might fail if directives remain)
-            ast = self._parse_with_fake_headers(source_code) # This line will now likely fail if source_code still has directives/comments
-        
-        for node in ast.ext:
-            if isinstance(node, c_ast.FuncDef):
-                if node.decl.name == function_name:
-                    return self._extract_signature(node)
-        
-        raise ValueError(f"Function '{function_name}' not found in {self.source_file}")
-    
-    def extract_typedefs(self):
-        """
-        Extract all typedef declarations from source file.
-        
-        Returns:
-            list: List of typedef strings (e.g., ['typedef int int32_t;', ...])
-        """
-        with open(self.source_file, 'r') as f:
-            source_code = f.read()
+            print(f"[DEBUG] Parse Error: {e}")
+            print(f"[DEBUG] Code being parsed:\n{full_code}")
+            raise
             
-        # Preprocess: Remove directives for pycparser
-        clean_source = re.sub(r'^\s*#.*$', '', source_code, flags=re.MULTILINE)
-        
-        # Remove comments
-        clean_source = self._remove_comments(clean_source)
-            
-        parser = c_parser.CParser()
-        
-        try:
-            ast = parser.parse(clean_source, filename=self.source_file)
-        except Exception:
-            ast = self._parse_with_fake_headers(clean_source)
-        
-        typedefs = []
-        
+        # Find the function declaration in the AST
+        # It will be the last node usually, or we search for it
         for node in ast.ext:
-            if isinstance(node, c_ast.Typedef):
-                typedef_str = self._typedef_to_string(node)
-                if typedef_str:
-                    typedefs.append(typedef_str)
-        
-        return typedefs
-    
-    def _typedef_to_string(self, typedef_node):
-        """Convert typedef AST node to string."""
-        try:
-            type_str = self._get_type_string(typedef_node.type)
-            name = typedef_node.name
-            return f"typedef {type_str} {name};"
-        except:
-            return None
-    
-    def _remove_comments(self, source_code):
-        """Remove C and C++ style comments from source code."""
-        # Remove C++ style comments (//)
-        source_code = re.sub(r'//.*?$', '', source_code, flags=re.MULTILINE)
-        
-        # Remove C style comments (/* */)
-        source_code = re.sub(r'/\*.*?\*/', '', source_code, flags=re.DOTALL)
-        
-        return source_code
-    
-    def _parse_with_fake_headers(self, source_code):
-        """Parse with fake libc headers to handle typedefs."""
-        fake_includes = """
-typedef int int8_t;
-typedef int int16_t;
-typedef int int32_t;
-typedef int int64_t;
-typedef unsigned int uint8_t;
-typedef unsigned int uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned int uint64_t;
-typedef unsigned int size_t;
-typedef int esp_err_t;
+            if isinstance(node, c_ast.Decl) and node.name == function_name:
+                 # Wrap in fake FuncDef for extraction logic compatibility
+                 fake_def = c_ast.FuncDef(decl=node, param_decls=None, body=None)
+                 return self._extract_signature_from_ast(fake_def)
+            elif isinstance(node, c_ast.FuncDef) and node.decl.name == function_name:
+                 return self._extract_signature_from_ast(node)
+                 
+        raise ValueError(f"Parsed successfully but function '{function_name}' node not found in AST")
+
+    def _extract_signature_string(self, source_code, func_name):
         """
+        Extract the function signature string (prototype) from source code.
+        Strategy:
+        1. Find the line containing the function name.
+        2. Extract text before the name (return type).
+        3. Extract text after the name (argument list) up to the closing parenthesis.
+        4. Construct a clean prototype: "ReturnType FunctionName(Args);"
+        """
+        lines = source_code.splitlines()
         
-        modified_source = fake_includes + "\n" + source_code
-        parser = c_parser.CParser()
-        
-        return parser.parse(modified_source, filename='<modified>')
-    
-    def _extract_signature(self, func_node):
+        for i, line in enumerate(lines):
+            if func_name in line:
+                # Check if this looks like a definition start
+                
+                # Find start of name
+                idx = line.find(func_name)
+                if idx == -1: continue
+                
+                # Check if it's a call or definition
+                # Look ahead for (
+                rest = line[idx + len(func_name):].strip()
+                if not rest.startswith('('):
+                    continue
+                    
+                # It matches "Name("
+                # Now capture the return type (preceding text)
+                return_type_part = line[:idx].strip()
+                
+                # Now capture arguments. They might span multiple lines.
+                # We start from the opening (
+                
+                combined_text = source_code[source_code.find(line):] # Start from this line
+                
+                # Simple parenthesis counter
+                balance = 0
+                args_end_idx = -1
+                
+                # Find the first ( relative to combined_text
+                start_paren = combined_text.find('(')
+                
+                if start_paren == -1: continue
+
+                for j, char in enumerate(combined_text[start_paren:]):
+                    if char == '(':
+                        balance += 1
+                    elif char == ')':
+                        balance -= 1
+                        if balance == 0:
+                            args_end_idx = start_paren + j
+                            break
+                
+                if args_end_idx != -1:
+                    args_part = combined_text[start_paren:args_end_idx+1]
+                    
+                    # Construct prototype
+                    prototype_str = f"{return_type_part} {func_name}{args_part};"
+                    print(f"[DEBUG] Extracted Signature: {prototype_str}")
+                    return prototype_str
+                    
+        return None
+
+    def _save_debug_output(self, content):
+        """Save the parsed content to a file for debugging."""
+        try:
+            source_dir = os.path.dirname(os.path.abspath(self.source_file))
+            test_root = os.path.dirname(source_dir) # Go up one level from 'source'
+            build_dir = os.path.join(test_root, 'build')
+            
+            if not os.path.exists(build_dir):
+                os.makedirs(build_dir)
+                
+            debug_path = os.path.join(build_dir, 'extracted_signature.c')
+            with open(debug_path, 'w') as f:
+                f.write(content)
+            print(f"[DEBUG] Parsing input saved to: {debug_path}")
+        except Exception as e:
+            print(f"[DEBUG] Failed to save debug output: {e}")
+
+    def _extract_signature_from_ast(self, func_node):
         """Extract signature information from function AST node."""
         func_decl = func_node.decl
         
@@ -175,12 +211,6 @@ typedef int esp_err_t;
     def classify_parameter(self, type_str):
         """
         Classify parameter as 'value' or 'pointer'.
-        
-        Args:
-            type_str: Type string (e.g., 'int32_t', 'float*', 'char[]')
-            
-        Returns:
-            str: 'value' or 'pointer'
         """
         if '*' in type_str or '[]' in type_str:
             return 'pointer'
@@ -190,13 +220,6 @@ typedef int esp_err_t;
     def validate_parameter_count(self, param_count, max_params):
         """
         Validate parameter count fits in args array.
-        
-        Args:
-            param_count: Number of parameters
-            max_params: Maximum allowed parameters
-            
-        Raises:
-            ValueError: If param_count > max_params
         """
         if param_count > max_params:
             raise ValueError(
