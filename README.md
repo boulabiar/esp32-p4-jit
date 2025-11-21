@@ -223,6 +223,29 @@ remote_func(args)
 *   `build(source, output, ...)`: Low-level compile.
 *   `wrapper.build_with_wrapper(source, function_name, base_address, arg_address)`: High-level build with ABI wrapper.
 
+### `esp32_loader.binary_object.BinaryObject`
+Represents the compiled binary artifact.
+
+**Properties**
+*   `binary.data`: Raw binary data (bytes).
+*   `binary.total_size`: Total size including BSS padding.
+*   `binary.base_address`: The linked load address.
+*   `binary.entry_address`: Address of the entry point.
+*   `binary.functions`: List of all functions and their addresses.
+
+**Methods**
+*   `save_bin(path)`: Save raw binary file.
+*   `save_elf(path)`: Save ELF file with debug symbols.
+*   `save_metadata(path)`: Save JSON metadata.
+*   `print_sections()`: Print section table.
+*   `print_symbols()`: Print symbol table.
+*   `print_memory_map()`: Print visual memory map.
+*   `disassemble(output)`: Disassemble code to file or stdout.
+*   `get_data()`: Get raw bytes.
+*   `get_metadata_dict()`: Get metadata as dictionary.
+*   `get_function_address(name)`: Get address of a specific function.
+*   `validate()`: Perform internal validation checks.
+
 ### `p4_jit.jit_session.JITSession`
 *   `connect(port=None)`: Connect to device.
 *   `load_function(binary_object, args_addr)`: Upload binary and return `RemoteFunction` handle.

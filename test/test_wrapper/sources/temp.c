@@ -4,11 +4,17 @@
 // Arguments: 3 (slots 0-2)
 // Return value: slot 31
 
+
+#include <stdint.h>
 #include "test_func.h"  // Include generated header
 
-
+// Wrapper function to handle argument unpacking and return value
+// Args are passed via a memory region (args_addr)
+// [0..N-1]: Arguments
+// [N]: Return value (if any)
 typedef int esp_err_t;
 #define ESP_OK 0
+
 
 esp_err_t call_remote(void) {
     volatile int32_t *io = (volatile int32_t *)0x50000000;

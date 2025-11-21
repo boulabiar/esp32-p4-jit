@@ -4,10 +4,6 @@
 // Auto-generated header for InterpolateWaveHermite
 // Source: test_func.c
 
-// Extracted typedefs
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef signed char int8_t;
 
 // Function declaration
 float InterpolateWaveHermite(float* table, int32_t index_integral, float index_fractional);
