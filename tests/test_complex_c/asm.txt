@@ -1,0 +1,44 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_je48v2po\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48212b80 <call_remote>:
+48212b80:	482136b7          	lui	a3,0x48213
+48212b84:	c846a703          	lw	a4,-892(a3) # 48212c84 <__binary_end+0x8c>
+48212b88:	c806a783          	lw	a5,-896(a3)
+48212b8c:	c886a707          	flw	fa4,-888(a3)
+48212b90:	c8c6a687          	flw	fa3,-884(a3)
+48212b94:	04e05b63          	blez	a4,48212bea <call_remote+0x6a>
+48212b98:	070a                	slli	a4,a4,0x2
+48212b9a:	f0000653          	fmv.w.x	fa2,zero
+48212b9e:	00f70633          	add	a2,a4,a5
+48212ba2:	4681                	li	a3,0
+48212ba4:	a809                	j	48212bb6 <call_remote+0x36>
+48212ba6:	c0079753          	fcvt.w.s	a4,fa5,rtz
+48212baa:	0791                	addi	a5,a5,4
+48212bac:	fee7ae23          	sw	a4,-4(a5)
+48212bb0:	96ba                	add	a3,a3,a4
+48212bb2:	02f60663          	beq	a2,a5,48212bde <call_remote+0x5e>
+48212bb6:	4398                	lw	a4,0(a5)
+48212bb8:	d00777d3          	fcvt.s.w	fa5,a4
+48212bbc:	10f777d3          	fmul.s	fa5,fa4,fa5
+48212bc0:	68f7f7c3          	fmadd.s	fa5,fa5,fa5,fa3
+48212bc4:	a0c79753          	flt.s	a4,fa5,fa2
+48212bc8:	df79                	beqz	a4,48212ba6 <call_remote+0x26>
+48212bca:	20f797d3          	fneg.s	fa5,fa5
+48212bce:	0791                	addi	a5,a5,4
+48212bd0:	c0079753          	fcvt.w.s	a4,fa5,rtz
+48212bd4:	fee7ae23          	sw	a4,-4(a5)
+48212bd8:	96ba                	add	a3,a3,a4
+48212bda:	fcf61ee3          	bne	a2,a5,48212bb6 <call_remote+0x36>
+48212bde:	482137b7          	lui	a5,0x48213
+48212be2:	ced7ae23          	sw	a3,-772(a5) # 48212cfc <__binary_end+0x104>
+48212be6:	4501                	li	a0,0
+48212be8:	8082                	ret
+48212bea:	4681                	li	a3,0
+48212bec:	482137b7          	lui	a5,0x48213
+48212bf0:	ced7ae23          	sw	a3,-772(a5) # 48212cfc <__binary_end+0x104>
+48212bf4:	4501                	li	a0,0
+48212bf6:	8082                	ret

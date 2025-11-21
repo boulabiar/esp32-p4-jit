@@ -45,6 +45,11 @@ class MetadataGenerator:
         addresses = self.calculate_addresses()
         
         metadata = {
+            # Ensure compatibility with SmartArgs by including raw signature fields at top level
+            'name': self.signature['name'],
+            'return_type': self.signature['return_type'],
+            'parameters': self.signature['parameters'],
+            
             'function': {
                 'name': self.signature['name'],
                 'return_type': self.signature['return_type'],

@@ -147,12 +147,24 @@ typedef int esp_err_t;
         
         lines = [f"    // Write result ({return_type}) to slot {return_idx}"]
         
-        if 'float' in return_type or 'double' in return_type:
-            lines.append(f"    io[{return_idx}] = *(int32_t*)& result;")
-        elif '*' in return_type:
-            lines.append(f"    io[{return_idx}] = (int32_t) result;")
+        # Use explicit pointer casting to write the result
+        # This avoids implicit casting issues and preserves the raw bit representation
+        
+        if '*' in return_type:
+            # Pointers: Cast slot address to uint32_t* and write casted result
+            lines.append(f"    *(uint32_t*)&io[{return_idx}] = (uint32_t)result;")
+        elif return_type == 'float':
+            # Float: Cast slot address to float* and write result
+            lines.append(f"    *(float*)&io[{return_idx}] = result;")
+        elif return_type == 'double':
+            # Double: Cast to float (truncation) as we only have 32-bit slots
+            # Ideally we should use 2 slots for double, but for now we stick to 32-bit limitation
+            lines.append(f"    *(float*)&io[{return_idx}] = (float)result;")
         else:
-            lines.append(f"    io[{return_idx}] = (int32_t) result;")
+            # Integers (int8, uint8, int16, uint16, int32, uint32, etc.)
+            # Cast slot address to the specific type pointer and write result
+            # This handles sign/zero extension correctly by writing only the necessary bytes
+            lines.append(f"    *({return_type}*)&io[{return_idx}] = result;")
         
         lines.append("")
         

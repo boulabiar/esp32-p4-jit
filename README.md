@@ -214,6 +214,60 @@ args = struct.pack("<Ii", data_addr, 4)
 remote_func(args)
 ```
 
+### 5.3 Smart Args (NumPy Support)
+
+The **Smart Args** feature automates type checking, memory allocation, and return value conversion using NumPy.
+
+**Prerequisites**:
+*   `numpy` installed.
+*   `smart_args=True` passed to `load_function`.
+
+**Usage**:
+```python
+import numpy as np
+
+# 1. Load Function with Smart Args
+remote_func = session.load_function(final_bin, args_addr, smart_args=True)
+
+# 2. Prepare NumPy Data (Strict Types Required)
+# You MUST use specific NumPy types (np.int32, np.float32, etc.)
+# Standard Python int/float are NOT allowed to prevent ambiguity.
+data = np.array([1, 2, 3, 4], dtype=np.int32)
+length = np.int32(4)
+
+# 3. Call Directly
+# Returns a NumPy scalar (e.g., np.int32)
+result = remote_func(data, length)
+
+print(f"Result: {result}")
+```
+
+**Configuration**:
+Map NumPy types to C types in `config/numpy_types.yaml`.
+
+---
+
+### 5.4 Multi-file Compilation & Optimization
+
+The builder automatically discovers and compiles all source files in the same directory as the entry file.
+
+**Multi-file Example**:
+If you have `main.c`, `helper.c`, and `math.c` in the same folder:
+```python
+# Point to the entry file. The builder finds the rest.
+builder.wrapper.build_with_wrapper(source="source/main.c", ...)
+```
+
+**Link Time Optimization (LTO)**:
+To enable cross-module inlining (e.g., inlining `helper.c` functions into `main.c`), enable LTO in `config/toolchain.yaml`:
+```yaml
+compiler:
+  flags: ["-flto"]
+linker:
+  flags: ["-flto"]
+```
+This produces a single, highly optimized instruction stream, eliminating function call overhead.
+
 ---
 
 ## 6. API Reference

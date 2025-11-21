@@ -40,10 +40,12 @@ compiler:
     - "-ffunction-sections"
     - "-fdata-sections"
     - "-msmall-data-limit=0"
+    - "-flto" # Enable Link Time Optimization (allows cross-module inlining)
 
 linker:
   garbage_collection: true
-  flags: []
+  flags: 
+    - "-flto" # Required for LTO to work during linking
     # - "-nostdlib" # Removed to allow linking libgcc for float helpers
 
 memory:
