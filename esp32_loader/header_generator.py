@@ -46,16 +46,9 @@ class HeaderGenerator:
     
     def _generate_typedefs(self):
         """Generate typedef section."""
-        typedefs = self.parse_typedefs()
-        
-        if not typedefs:
-            return ""
-        
-        lines = ["// Extracted typedefs"]
-        lines.extend(typedefs)
-        lines.append("")
-        
-        return '\n'.join(lines)
+        # We don't need to generate typedefs because we include <stdint.h> in the wrapper.
+        # Generating them causes conflicts with standard types.
+        return ""
     
     def _generate_function_declaration(self):
         """Generate function declaration (prototype)."""

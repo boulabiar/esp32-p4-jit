@@ -1,0 +1,58 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_9qhh_v54\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48212700 <call_remote>:
+
+    // Argument 0: VALUE type int
+    int a = *(int*)& io[0];
+
+    // Argument 1: VALUE type int
+    int b = *(int*)& io[1];
+48212700:	482127b7          	lui	a5,0x48212
+
+    // Call original function: compute_sum
+    float result = compute_sum(a, b);
+48212704:	7807a503          	lw	a0,1920(a5) # 48212780 <__binary_end+0x40>
+48212708:	7847a583          	lw	a1,1924(a5)
+esp_err_t call_remote(void) {
+4821270c:	1141                	addi	sp,sp,-16
+4821270e:	c606                	sw	ra,12(sp)
+    float result = compute_sum(a, b);
+48212710:	2819                	jal	48212726 <compute_sum>
+48212712:	e0050753          	fmv.x.w	a4,fa0
+
+    // Write result (float) to slot 31
+    io[31] = *(int32_t*)& result;
+
+    return ESP_OK;
+}
+48212716:	40b2                	lw	ra,12(sp)
+    io[31] = *(int32_t*)& result;
+48212718:	482127b7          	lui	a5,0x48212
+4821271c:	7ee7ae23          	sw	a4,2044(a5) # 482127fc <__binary_end+0xbc>
+}
+48212720:	4501                	li	a0,0
+48212722:	0141                	addi	sp,sp,16
+48212724:	8082                	ret
+
+48212726 <compute_sum>:
+// The wrapper will handle reading args from the memory-mapped region
+float compute_sum(int a, int b) {
+    
+    int c; float d;
+    
+    c = a + b;
+48212726:	952e                	add	a0,a0,a1
+    
+    d = c * 3.14f;
+48212728:	482127b7          	lui	a5,0x48212
+4821272c:	d0057553          	fcvt.s.w	fa0,a0
+48212730:	73c7a787          	flw	fa5,1852(a5) # 4821273c <compute_sum+0x16>
+    
+    return  d;
+}
+48212734:	10f57553          	fmul.s	fa0,fa0,fa5
+48212738:	8082                	ret

@@ -105,6 +105,9 @@ class WrapperBuilder:
         )
         signature_path = metadata_gen.save_json(output_dir)
         
+        # Attach metadata to binary object
+        binary.metadata = metadata_gen.generate_metadata()
+        
         print(f"  Generated: {signature_path}")
         print()
         

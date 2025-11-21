@@ -1,0 +1,100 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_1x7ctqy9\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48214c80 <call_remote>:
+48214c80:	482157b7          	lui	a5,0x48215
+48214c84:	e007a503          	lw	a0,-512(a5) # 48214e00 <__binary_end+0x80>
+48214c88:	e047a583          	lw	a1,-508(a5)
+48214c8c:	1141                	addi	sp,sp,-16
+48214c8e:	c606                	sw	ra,12(sp)
+48214c90:	2809                	jal	48214ca2 <sum_array>
+48214c92:	40b2                	lw	ra,12(sp)
+48214c94:	482157b7          	lui	a5,0x48215
+48214c98:	e6a7ae23          	sw	a0,-388(a5) # 48214e7c <__binary_end+0xfc>
+48214c9c:	4501                	li	a0,0
+48214c9e:	0141                	addi	sp,sp,16
+48214ca0:	8082                	ret
+
+48214ca2 <sum_array>:
+48214ca2:	1101                	addi	sp,sp,-32
+48214ca4:	ce06                	sw	ra,28(sp)
+48214ca6:	cc22                	sw	s0,24(sp)
+48214ca8:	02b05563          	blez	a1,48214cd2 <sum_array+0x30>
+48214cac:	95aa                	add	a1,a1,a0
+48214cae:	4401                	li	s0,0
+48214cb0:	00050783          	lb	a5,0(a0)
+48214cb4:	0505                	addi	a0,a0,1
+48214cb6:	943e                	add	s0,s0,a5
+48214cb8:	fea59ce3          	bne	a1,a0,48214cb0 <sum_array+0xe>
+48214cbc:	0048                	addi	a0,sp,4
+48214cbe:	4629                	li	a2,10
+48214cc0:	459d                	li	a1,7
+48214cc2:	2811                	jal	48214cd6 <memset>
+48214cc4:	00414503          	lbu	a0,4(sp)
+48214cc8:	40f2                	lw	ra,28(sp)
+48214cca:	9522                	add	a0,a0,s0
+48214ccc:	4462                	lw	s0,24(sp)
+48214cce:	6105                	addi	sp,sp,32
+48214cd0:	8082                	ret
+48214cd2:	4401                	li	s0,0
+48214cd4:	b7e5                	j	48214cbc <sum_array+0x1a>
+
+48214cd6 <memset>:
+48214cd6:	433d                	li	t1,15
+48214cd8:	872a                	mv	a4,a0
+48214cda:	02c37363          	bgeu	t1,a2,48214d00 <memset+0x2a>
+48214cde:	00f77793          	andi	a5,a4,15
+48214ce2:	efbd                	bnez	a5,48214d60 <memset+0x8a>
+48214ce4:	e5ad                	bnez	a1,48214d4e <memset+0x78>
+48214ce6:	ff067693          	andi	a3,a2,-16
+48214cea:	8a3d                	andi	a2,a2,15
+48214cec:	96ba                	add	a3,a3,a4
+48214cee:	c30c                	sw	a1,0(a4)
+48214cf0:	c34c                	sw	a1,4(a4)
+48214cf2:	c70c                	sw	a1,8(a4)
+48214cf4:	c74c                	sw	a1,12(a4)
+48214cf6:	0741                	addi	a4,a4,16
+48214cf8:	fed76be3          	bltu	a4,a3,48214cee <memset+0x18>
+48214cfc:	e211                	bnez	a2,48214d00 <memset+0x2a>
+48214cfe:	8082                	ret
+48214d00:	40c306b3          	sub	a3,t1,a2
+48214d04:	068a                	slli	a3,a3,0x2
+48214d06:	00000297          	auipc	t0,0x0
+48214d0a:	9696                	add	a3,a3,t0
+48214d0c:	00a68067          	jr	10(a3)
+48214d10:	00b70723          	sb	a1,14(a4)
+48214d14:	00b706a3          	sb	a1,13(a4)
+48214d18:	00b70623          	sb	a1,12(a4)
+48214d1c:	00b705a3          	sb	a1,11(a4)
+48214d20:	00b70523          	sb	a1,10(a4)
+48214d24:	00b704a3          	sb	a1,9(a4)
+48214d28:	00b70423          	sb	a1,8(a4)
+48214d2c:	00b703a3          	sb	a1,7(a4)
+48214d30:	00b70323          	sb	a1,6(a4)
+48214d34:	00b702a3          	sb	a1,5(a4)
+48214d38:	00b70223          	sb	a1,4(a4)
+48214d3c:	00b701a3          	sb	a1,3(a4)
+48214d40:	00b70123          	sb	a1,2(a4)
+48214d44:	00b700a3          	sb	a1,1(a4)
+48214d48:	00b70023          	sb	a1,0(a4)
+48214d4c:	8082                	ret
+48214d4e:	0ff5f593          	zext.b	a1,a1
+48214d52:	00859693          	slli	a3,a1,0x8
+48214d56:	8dd5                	or	a1,a1,a3
+48214d58:	01059693          	slli	a3,a1,0x10
+48214d5c:	8dd5                	or	a1,a1,a3
+48214d5e:	b761                	j	48214ce6 <memset+0x10>
+48214d60:	00279693          	slli	a3,a5,0x2
+48214d64:	00000297          	auipc	t0,0x0
+48214d68:	9696                	add	a3,a3,t0
+48214d6a:	8286                	mv	t0,ra
+48214d6c:	fa8680e7          	jalr	-88(a3)
+48214d70:	8096                	mv	ra,t0
+48214d72:	17c1                	addi	a5,a5,-16
+48214d74:	8f1d                	sub	a4,a4,a5
+48214d76:	963e                	add	a2,a2,a5
+48214d78:	f8c374e3          	bgeu	t1,a2,48214d00 <memset+0x2a>
+48214d7c:	b7a5                	j	48214ce4 <memset+0xe>

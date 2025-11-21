@@ -34,7 +34,7 @@ compiler:
   abi: "ilp32f"
   optimization: "O3"
   flags:
-    - "-nostdlib"
+    # - "-nostdlib"
     - "-ffreestanding"
     - "-fno-builtin"
     - "-ffunction-sections"
@@ -43,8 +43,8 @@ compiler:
 
 linker:
   garbage_collection: true
-  flags:
-    - "-nostdlib"
+  flags: []
+    # - "-nostdlib" # Removed to allow linking libgcc for float helpers
 
 memory:
   max_size: "128K"

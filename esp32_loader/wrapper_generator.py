@@ -68,14 +68,22 @@ class WrapperGenerator:
     
     def _generate_includes(self):
         """Generate include directive for generated header."""
-        return f'#include "{self.header_name}"  // Include generated header\n'
-    
-    def _generate_typedefs(self):
-        """Generate ESP-IDF typedefs."""
-        return """
+        return f"""
+#include <stdint.h>
+#include "{self.header_name}"  // Include generated header
+
+// Wrapper function to handle argument unpacking and return value
+// Args are passed via a memory region (args_addr)
+// [0..N-1]: Arguments
+// [N]: Return value (if any)
 typedef int esp_err_t;
 #define ESP_OK 0
 """
+    
+    def _generate_typedefs(self):
+        """Generate ESP-IDF typedefs."""
+        # This method is now empty as its content has been moved to _generate_includes
+        return ""
     
     def _generate_function_start(self):
         """Generate function signature."""

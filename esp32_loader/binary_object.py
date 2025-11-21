@@ -20,7 +20,10 @@ class BinaryObject:
         self._entry_address = entry_address
         self._sections = sections
         self._symbols = symbols
+        self._sections = sections
+        self._symbols = symbols
         self._output_dir = output_dir
+        self.metadata = {} # Extra metadata (e.g. from wrapper)
         
         # Build full path to objdump
         toolchain_path = config['toolchain']['path']
@@ -80,15 +83,18 @@ class BinaryObject:
         with open(path, 'w') as f:
             json.dump(metadata, f, indent=2)
             
-    def disassemble(self, output=None):
+    def disassemble(self, output=None, source_intermix=True):
         """
         Disassemble binary.
         
         Args:
             output (str): Output file path. If None, prints to stdout.
+            source_intermix (bool): If True, intermix source code with assembly (pass -S).
         """
-        # pass -S (intermix source code) if possible. It makes debugging much easie
-        cmd = [self._objdump, '-d', '-S', self._elf_path]
+        cmd = [self._objdump, '-d']
+        if source_intermix:
+            cmd.append('-S')
+        cmd.append(self._elf_path)
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if output:

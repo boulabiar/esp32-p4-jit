@@ -1,12 +1,12 @@
 import re
 import os
+import sys
 from pycparser import c_parser, c_ast, parse_file
 
 
 class SignatureParser:
     """
-    Parse C function signatures from source files.
-    Extracts function name, return type, and parameters with type classification.
+    Parses C source files to extract function signatures using pycparser.
     """
     
     def __init__(self, source_file):
@@ -17,30 +17,28 @@ class SignatureParser:
         Parse function signature from source file.
         
         Args:
-            function_name: Name of function to parse
+            function_name (str): Name of function to find
             
         Returns:
-            dict: {
-                'name': str,
-                'return_type': str,
-                'parameters': [{'name': str, 'type': str, 'category': str}]
-            }
-            
-        Raises:
-            ValueError: If function not found or parsing fails
+            dict: Function signature details
         """
         with open(self.source_file, 'r') as f:
             source_code = f.read()
         
-        # Remove comments before parsing
-        source_code = self._remove_comments(source_code)
+        # Preprocess: Remove directives for pycparser
+        # pycparser doesn't support #include, #define, etc.
+        # We strip them but keep newlines to preserve line numbers
+        clean_source = re.sub(r'^\s*#.*$', '', source_code, flags=re.MULTILINE)
         
-        parser = c_parser.CParser()
-        
+        # Remove comments
+        clean_source = self._remove_comments(clean_source)
+            
         try:
-            ast = parser.parse(source_code, filename=self.source_file)
-        except Exception:
-            ast = self._parse_with_fake_headers(source_code)
+            # Try parsing the cleaned source
+            ast = self._parse_with_fake_headers(clean_source)
+        except Exception as e:
+            # Fallback to original behavior (might fail if directives remain)
+            ast = self._parse_with_fake_headers(source_code) # This line will now likely fail if source_code still has directives/comments
         
         for node in ast.ext:
             if isinstance(node, c_ast.FuncDef):
@@ -58,16 +56,19 @@ class SignatureParser:
         """
         with open(self.source_file, 'r') as f:
             source_code = f.read()
+            
+        # Preprocess: Remove directives for pycparser
+        clean_source = re.sub(r'^\s*#.*$', '', source_code, flags=re.MULTILINE)
         
         # Remove comments
-        source_code = self._remove_comments(source_code)
-        
+        clean_source = self._remove_comments(clean_source)
+            
         parser = c_parser.CParser()
         
         try:
-            ast = parser.parse(source_code, filename=self.source_file)
+            ast = parser.parse(clean_source, filename=self.source_file)
         except Exception:
-            ast = self._parse_with_fake_headers(source_code)
+            ast = self._parse_with_fake_headers(clean_source)
         
         typedefs = []
         

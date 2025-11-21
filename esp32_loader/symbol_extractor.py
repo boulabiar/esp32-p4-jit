@@ -72,7 +72,8 @@ class SymbolExtractor:
                     else:
                         continue
                     
-                    if address != 0 and name:
+                    # Allow address 0 (needed for relative builds/first pass)
+                    if name:
                         symbols.append({
                             'name': name,
                             'address': address,
