@@ -1,0 +1,25 @@
+{
+  "entry_point": "InterpolateWaveHermite",
+  "entry_address": "0x40800000",
+  "base_address": "0x40800000",
+  "total_size": 72,
+  "sections": {
+    ".text": {
+      "address": "0x40800000",
+      "size": 66,
+      "type": "PROGBITS"
+    },
+    ".rodata": {
+      "address": "0x40800044",
+      "size": 4,
+      "type": "PROGBITS"
+    }
+  },
+  "functions": [
+    {
+      "name": "InterpolateWaveHermite",
+      "address": "0x40800000",
+      "size": 66
+    }
+  ]
+}

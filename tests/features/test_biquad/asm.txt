@@ -1,0 +1,85 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_ckqw7hsi\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48211580 <call_remote>:
+48211580:	482117b7          	lui	a5,0x48211
+48211584:	883e                	mv	a6,a5
+48211586:	853e                	mv	a0,a5
+48211588:	85be                	mv	a1,a5
+4821158a:	7047a603          	lw	a2,1796(a5) # 48211704 <__binary_end+0x98>
+4821158e:	7007a703          	lw	a4,1792(a5)
+48211592:	7087a783          	lw	a5,1800(a5)
+48211596:	70c82803          	lw	a6,1804(a6)
+4821159a:	71052503          	lw	a0,1808(a0)
+4821159e:	7145a583          	lw	a1,1812(a1)
+482115a2:	0cc05363          	blez	a2,48211668 <call_remote+0xe8>
+482115a6:	00082787          	flw	fa5,0(a6)
+482115aa:	00482707          	flw	fa4,4(a6)
+482115ae:	0741                	addi	a4,a4,16
+482115b0:	060a                	slli	a2,a2,0x2
+482115b2:	963a                	add	a2,a2,a4
+482115b4:	86ba                	mv	a3,a4
+482115b6:	6294                	flw	fa3,0(a3)
+482115b8:	67d0                	flw	fa2,12(a5)
+482115ba:	20f785d3          	fmv.s	fa1,fa5
+482115be:	6b88                	flw	fa0,16(a5)
+482115c0:	68f677cb          	fnmsub.s	fa5,fa2,fa5,fa3
+482115c4:	0047a007          	flw	ft0,4(a5)
+482115c8:	6390                	flw	fa2,0(a5)
+482115ca:	6794                	flw	fa3,8(a5)
+482115cc:	1005f5d3          	fmul.s	fa1,fa1,ft0
+482115d0:	78e577cb          	fnmsub.s	fa5,fa0,fa4,fa5
+482115d4:	0691                	addi	a3,a3,4
+482115d6:	58c7f643          	fmadd.s	fa2,fa5,fa2,fa1
+482115da:	60e6f743          	fmadd.s	fa4,fa3,fa4,fa2
+482115de:	fee6ae27          	fsw	fa4,-4(a3)
+482115e2:	00082707          	flw	fa4,0(a6)
+482115e6:	00f82027          	fsw	fa5,0(a6)
+482115ea:	00e82227          	fsw	fa4,4(a6)
+482115ee:	fcd614e3          	bne	a2,a3,482115b6 <call_remote+0x36>
+482115f2:	611c                	flw	fa5,0(a0)
+482115f4:	6158                	flw	fa4,4(a0)
+482115f6:	86ba                	mv	a3,a4
+482115f8:	6294                	flw	fa3,0(a3)
+482115fa:	67d0                	flw	fa2,12(a5)
+482115fc:	20f785d3          	fmv.s	fa1,fa5
+48211600:	6b88                	flw	fa0,16(a5)
+48211602:	68f677cb          	fnmsub.s	fa5,fa2,fa5,fa3
+48211606:	0047a007          	flw	ft0,4(a5)
+4821160a:	6390                	flw	fa2,0(a5)
+4821160c:	6794                	flw	fa3,8(a5)
+4821160e:	1005f5d3          	fmul.s	fa1,fa1,ft0
+48211612:	78e577cb          	fnmsub.s	fa5,fa0,fa4,fa5
+48211616:	0691                	addi	a3,a3,4
+48211618:	58c7f643          	fmadd.s	fa2,fa5,fa2,fa1
+4821161c:	60e6f743          	fmadd.s	fa4,fa3,fa4,fa2
+48211620:	fee6ae27          	fsw	fa4,-4(a3)
+48211624:	6118                	flw	fa4,0(a0)
+48211626:	e11c                	fsw	fa5,0(a0)
+48211628:	e158                	fsw	fa4,4(a0)
+4821162a:	fcd617e3          	bne	a2,a3,482115f8 <call_remote+0x78>
+4821162e:	619c                	flw	fa5,0(a1)
+48211630:	61d8                	flw	fa4,4(a1)
+48211632:	6314                	flw	fa3,0(a4)
+48211634:	67d0                	flw	fa2,12(a5)
+48211636:	20f785d3          	fmv.s	fa1,fa5
+4821163a:	6b88                	flw	fa0,16(a5)
+4821163c:	68f677cb          	fnmsub.s	fa5,fa2,fa5,fa3
+48211640:	0047a007          	flw	ft0,4(a5)
+48211644:	6390                	flw	fa2,0(a5)
+48211646:	6794                	flw	fa3,8(a5)
+48211648:	1005f5d3          	fmul.s	fa1,fa1,ft0
+4821164c:	78e577cb          	fnmsub.s	fa5,fa0,fa4,fa5
+48211650:	0711                	addi	a4,a4,4
+48211652:	58c7f643          	fmadd.s	fa2,fa5,fa2,fa1
+48211656:	60e6f743          	fmadd.s	fa4,fa3,fa4,fa2
+4821165a:	fee72e27          	fsw	fa4,-4(a4)
+4821165e:	6198                	flw	fa4,0(a1)
+48211660:	e19c                	fsw	fa5,0(a1)
+48211662:	e1d8                	fsw	fa4,4(a1)
+48211664:	fce617e3          	bne	a2,a4,48211632 <call_remote+0xb2>
+48211668:	4501                	li	a0,0
+4821166a:	8082                	ret
