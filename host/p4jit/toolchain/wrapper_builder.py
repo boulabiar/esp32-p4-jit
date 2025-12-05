@@ -74,6 +74,20 @@ class WrapperBuilder:
         header_gen = HeaderGenerator(source, signature)
         header_path = header_gen.save_header(source_dir)
         print(f"  Generated: {header_path}")
+        
+        # Copy std_types.h to source_dir so the generated header can include it
+        # We assume project root is 3 levels up from this file (host/p4jit/toolchain/wrapper_builder.py)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        std_types_src = os.path.join(project_root, 'config', 'std_types.h')
+        std_types_dst = os.path.join(source_dir, 'std_types.h')
+        
+        if os.path.exists(std_types_src):
+            print(f"  Copying std_types.h to {source_dir}")
+            import shutil
+            shutil.copy2(std_types_src, std_types_dst)
+        else:
+            print(f"  Warning: std_types.h not found at {std_types_src}")
+            
         print()
         
         # Generate wrapper

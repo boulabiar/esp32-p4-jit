@@ -7,30 +7,29 @@ class RemoteFunction:
     Represents a function loaded on the remote device.
     """
     def __init__(self, device_manager, code_addr: int, args_addr: int, 
-                 signature: Optional[Dict[str, Any]] = None, smart_args: bool = False):
+                 signature: Optional[Dict[str, Any]] = None, smart_args: bool = False,
+                 sync_arrays: bool = True):
         self.dm = device_manager
         self.code_addr = code_addr
         self.args_addr = args_addr
         self.signature = signature
         self.smart_args = smart_args
+        
+        # PERSISTENT CONFIGURATION
+        self.sync_enabled = sync_arrays
 
     def __call__(self, *args) -> Any:
         """
         Call the remote function.
-        
-        Args:
-            *args: 
-                If smart_args=False: Expects a single bytes object (args_blob).
-                If smart_args=True: Expects variable arguments matching the function signature.
-            
-        Returns:
-            The return value from the function.
         """
         if self.smart_args:
             if not self.signature:
                 raise ValueError("Smart args enabled but no signature provided")
-                
-            handler = SmartArgs(self.dm, self.signature)
+            
+            # FRESH HANDLER PER CALL
+            # Pass the persistent configuration 'self.sync_enabled'
+            handler = SmartArgs(self.dm, self.signature, sync_enabled=self.sync_enabled)
+            
             try:
                 # Pack arguments using SmartArgs
                 args_blob = handler.pack(*args)
@@ -40,6 +39,9 @@ class RemoteFunction:
                 
                 # Execute
                 self.dm.execute(self.code_addr)
+                
+                # Sync Back using the fresh handler
+                handler.sync_back()
                 
                 # Read and convert return value
                 return handler.get_return_value(self.args_addr)

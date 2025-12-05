@@ -46,6 +46,18 @@ typedef struct {
 typedef struct {
     uint32_t return_value;
 } cmd_exec_resp_t;
+
+typedef struct {
+    uint32_t dummy; // Empty payload, but structs can't be empty in C standard sometimes, though GCC allows it.
+                    // We'll just read 0 bytes payload.
+} cmd_heap_info_req_t;
+
+typedef struct {
+    uint32_t free_spiram;
+    uint32_t total_spiram;
+    uint32_t free_internal;
+    uint32_t total_internal;
+} cmd_heap_info_resp_t;
 #pragma pack(pop)
 
 uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_t *out_payload, uint32_t *out_len) {
@@ -155,6 +167,25 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             cmd_exec_resp_t *resp = (cmd_exec_resp_t*)out_payload;
             resp->return_value = ret;
             *out_len = sizeof(cmd_exec_resp_t);
+            return ERR_OK;
+        }
+
+        case CMD_HEAP_INFO: {
+            // No request payload needed
+            
+            cmd_heap_info_resp_t *resp = (cmd_heap_info_resp_t*)out_payload;
+            
+            resp->free_spiram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+            resp->total_spiram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
+            
+            resp->free_internal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+            resp->total_internal = heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
+            
+            ESP_LOGI(TAG, "Heap Info: SPIRAM: %lu/%lu, INT: %lu/%lu",
+                     resp->free_spiram, resp->total_spiram,
+                     resp->free_internal, resp->total_internal);
+            
+            *out_len = sizeof(cmd_heap_info_resp_t);
             return ERR_OK;
         }
 

@@ -46,9 +46,8 @@ class HeaderGenerator:
     
     def _generate_typedefs(self):
         """Generate typedef section."""
-        # We don't need to generate typedefs because we include <stdint.h> in the wrapper.
-        # Generating them causes conflicts with standard types.
-        return ""
+        # Include std_types.h which contains standard types and custom structs (like Point)
+        return '#include "std_types.h"\n'
     
     def _generate_function_declaration(self):
         """Generate function declaration (prototype)."""

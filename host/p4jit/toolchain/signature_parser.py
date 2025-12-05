@@ -2,6 +2,7 @@ import re
 import os
 import sys
 from pycparser import c_parser, c_ast
+from pycparser.plyparser import ParseError
 
 class SignatureParser:
     """
@@ -64,6 +65,7 @@ class SignatureParser:
             print(f"[DEBUG] Parse Error: {e}")
             print(f"[DEBUG] Code being parsed:\n{full_code}")
             raise
+
             
         # Find the function declaration in the AST
         # It will be the last node usually, or we search for it

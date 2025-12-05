@@ -11,6 +11,7 @@ CMD_FREE = 0x11
 CMD_WRITE_MEM = 0x20
 CMD_READ_MEM = 0x21
 CMD_EXEC = 0x30
+CMD_HEAP_INFO = 0x40
 
 ERR_OK = 0x00
 
@@ -147,6 +148,13 @@ class DeviceManager:
         if address not in self.allocations:
             raise ValueError(f"Address 0x{address:08X} not tracked in allocation table")
 
+        # Send Free Command
+        payload = struct.pack('<I', address)
+        self._send_packet(CMD_FREE, payload)
+        
+        # Remove from tracking
+        del self.allocations[address]
+
     def write_memory(self, address: int, data: bytes):
         # Validation
         end_addr = address + len(data)
@@ -202,3 +210,29 @@ class DeviceManager:
         payload = struct.pack('<I', address)
         resp = self._send_packet(CMD_EXEC, payload)
         return struct.unpack('<I', resp)[0]
+
+    def get_heap_info(self) -> Dict[str, int]:
+        """
+        Get heap memory statistics from the device.
+        
+        Returns:
+            dict: {
+                'free_spiram': int,
+                'total_spiram': int,
+                'free_internal': int,
+                'total_internal': int
+            }
+        """
+        resp = self._send_packet(CMD_HEAP_INFO, b'')
+        
+        if len(resp) < 16:
+             raise RuntimeError("Invalid response length for HEAP_INFO")
+             
+        free_spiram, total_spiram, free_internal, total_internal = struct.unpack('<IIII', resp)
+        
+        return {
+            'free_spiram': free_spiram,
+            'total_spiram': total_spiram,
+            'free_internal': free_internal,
+            'total_internal': total_internal
+        }

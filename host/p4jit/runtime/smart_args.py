@@ -12,12 +12,18 @@ class SmartArgs:
     - Packs arguments into binary blob.
     - Reads and converts return values.
     - Manages memory cleanup.
+    - Handles automatic sync-back of arrays if enabled.
     """
     
-    def __init__(self, device_manager, signature: Dict[str, Any]):
+    def __init__(self, device_manager, signature: Dict[str, Any], sync_enabled: bool = True):
         self.dm = device_manager
         self.signature = signature
+        # Configuration
+        self.sync_enabled = sync_enabled
+        
+        # State
         self.allocations: List[int] = []
+        self.tracked_arrays: List[Dict[str, Any]] = []
         self._load_config()
         
     def _load_config(self):
@@ -112,6 +118,16 @@ class SmartArgs:
         # Write data
         self.dm.write_memory(addr, flat_arr.tobytes())
         
+        # Track for Sync-Back (if enabled)
+        if self.sync_enabled:
+             self.tracked_arrays.append({
+                 'addr': addr,
+                 'array': arg,           # Reference to original array
+                 'size': size_bytes,     # Size in bytes
+                 'shape': arg.shape,     # Original shape
+                 'dtype': arg.dtype      # Original dtype
+             })
+        
         # Return address as 32-bit integer
         return struct.pack('<I', addr)
 
@@ -175,6 +191,28 @@ class SmartArgs:
                 # Fallback for unknown types (e.g. size_t, etc.) -> return as int
                 return val_i32
 
+    def sync_back(self):
+        """
+        Reads memory from device and updates host arrays in-place.
+        Only runs if sync_enabled is True and there are tracked arrays.
+        """
+        if not self.sync_enabled or not self.tracked_arrays:
+            return
+
+        for item in self.tracked_arrays:
+            try:
+                # 1. Read modified data
+                raw_bytes = self.dm.read_memory(item['addr'], item['size'])
+                
+                # 2. Create a view of the new data with correct type/shape
+                new_data = np.frombuffer(raw_bytes, dtype=item['dtype']).reshape(item['shape'])
+                
+                # 3. Update original array in-place
+                # np.copyto is efficient and safe for existing buffers
+                np.copyto(item['array'], new_data)
+            except Exception as e:
+                print(f"Warning: Failed to sync back memory at 0x{item['addr']:08x}: {e}")
+
     def cleanup(self):
         """Free all allocated memory."""
         for addr in self.allocations:
@@ -182,4 +220,7 @@ class SmartArgs:
                 self.dm.free(addr)
             except Exception as e:
                 print(f"Warning: Failed to free memory at 0x{addr:08x}: {e}")
+        
+        # Clear all state
         self.allocations.clear()
+        self.tracked_arrays.clear()

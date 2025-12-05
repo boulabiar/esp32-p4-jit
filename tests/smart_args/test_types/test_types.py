@@ -57,8 +57,8 @@ def test_types():
     )
     
     # Allocate
-    code_addr = session.device.allocate(temp_bin.total_size + 64, caps=1, alignment=128) # Exec
-    args_addr = session.device.allocate(temp_bin.metadata['addresses']['args_array_bytes'], caps=2, alignment=128) # Data
+    code_addr = session.device.allocate(temp_bin.total_size + 64, caps=1, alignment=16) # Exec
+    args_addr = session.device.allocate(temp_bin.metadata['addresses']['args_array_bytes'], caps=2, alignment=16) # Data
     
     # Pass 2: Final
     final_bin = builder.wrapper.build_with_wrapper(

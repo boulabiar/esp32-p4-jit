@@ -10,6 +10,7 @@
 #define CMD_WRITE_MEM   0x20
 #define CMD_READ_MEM    0x21
 #define CMD_EXEC        0x30
+#define CMD_HEAP_INFO   0x40
 
 // Error Codes
 #define ERR_OK          0x00
