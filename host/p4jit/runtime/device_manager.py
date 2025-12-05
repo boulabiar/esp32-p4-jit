@@ -133,6 +133,15 @@ class DeviceManager:
             
         addr, err = struct.unpack('<I I', resp)
         if err != 0:
+            print(f"Wrapper: Allocation Failed! requested_size={size}")
+            print("Tip: Check if available memory is sufficient.")
+            try:
+                stats = self.get_heap_info()
+                print("[Heap Status]")
+                for k, v in stats.items():
+                    print(f"  {k}: {v}")
+            except:
+                pass
             raise MemoryError(f"Allocation failed on device. Error: {err}")
             
         # Track allocation
