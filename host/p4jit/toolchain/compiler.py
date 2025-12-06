@@ -71,7 +71,8 @@ class Compiler:
                 include_flag,
                 '-c',
                 source,
-                '-o', output
+                '-o', output,
+                f'-Wa,-march={arch}' # Pass architecture to assembler
             ] + flags
         
         logger.log(INFO_VERBOSE, f"Compiling {os.path.basename(source)} with {compiler_name}...")
@@ -118,7 +119,8 @@ class Compiler:
             cmd.append(f'-Wl,-R,{firmware_elf}')
             
         cmd += obj_files + [
-            '-o', output
+            '-o', output,
+            f'-Wa,-march={arch}' # Pass architecture to assembler (critical for LTO+xesppie)
         ] + linker_flags
         
         if self.config['linker']['garbage_collection']:

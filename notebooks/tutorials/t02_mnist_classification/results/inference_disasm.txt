@@ -1,0 +1,1272 @@
+
+C:\Users\orani\AppData\Local\Temp\esp32_build_7q0q7wsf\output.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+48210ae0 <call_remote>:
+48210ae0:	7119                	addi	sp,sp,-128
+48210ae2:	48212eb7          	lui	t4,0x48212
+48210ae6:	dca2                	sw	s0,120(sp)
+48210ae8:	d8ca                	sw	s2,112(sp)
+48210aea:	c30ea403          	lw	s0,-976(t4) # 48211c30 <__binary_end+0x58>
+48210aee:	d6ce                	sw	s3,108(sp)
+48210af0:	d4d2                	sw	s4,104(sp)
+48210af2:	cede                	sw	s7,92(sp)
+48210af4:	c34eaa03          	lw	s4,-972(t4)
+48210af8:	cce2                	sw	s8,88(sp)
+48210afa:	c38eab83          	lw	s7,-968(t4)
+48210afe:	c6ee                	sw	s11,76(sp)
+48210b00:	c3cea903          	lw	s2,-964(t4)
+48210b04:	c40ea983          	lw	s3,-960(t4)
+48210b08:	c44ead83          	lw	s11,-956(t4)
+48210b0c:	c48eac03          	lw	s8,-952(t4)
+48210b10:	c4cea683          	lw	a3,-948(t4)
+48210b14:	48212537          	lui	a0,0x48212
+48210b18:	b4c50513          	addi	a0,a0,-1204 # 48211b4c <call_remote+0x106c>
+48210b1c:	de86                	sw	ra,124(sp)
+48210b1e:	daa6                	sw	s1,116(sp)
+48210b20:	d2d6                	sw	s5,100(sp)
+48210b22:	d0da                	sw	s6,96(sp)
+48210b24:	cae6                	sw	s9,84(sp)
+48210b26:	c50eab03          	lw	s6,-944(t4)
+48210b2a:	d636                	sw	a3,44(sp)
+48210b2c:	c54ea483          	lw	s1,-940(t4)
+48210b30:	c8ea                	sw	s10,80(sp)
+48210b32:	f7e06097          	auipc	ra,0xf7e06
+48210b36:	32a080e7          	jalr	810(ra) # 40016e5c <printf>
+48210b3a:	48212537          	lui	a0,0x48212
+48210b3e:	b7050513          	addi	a0,a0,-1168 # 48211b70 <call_remote+0x1090>
+48210b42:	f7e06097          	auipc	ra,0xf7e06
+48210b46:	31a080e7          	jalr	794(ra) # 40016e5c <printf>
+48210b4a:	001a0793          	addi	a5,s4,1
+48210b4e:	d03e                	sw	a5,32(sp)
+48210b50:	002a0793          	addi	a5,s4,2
+48210b54:	ce3e                	sw	a5,28(sp)
+48210b56:	004a0793          	addi	a5,s4,4
+48210b5a:	c83e                	sw	a5,16(sp)
+48210b5c:	007a0793          	addi	a5,s4,7
+48210b60:	ca3e                	sw	a5,20(sp)
+48210b62:	006a0793          	addi	a5,s4,6
+48210b66:	cc3e                	sw	a5,24(sp)
+48210b68:	83d2                	mv	t2,s4
+48210b6a:	4871                	li	a6,28
+48210b6c:	003a0c93          	addi	s9,s4,3
+48210b70:	00140293          	addi	t0,s0,1
+48210b74:	4781                	li	a5,0
+48210b76:	4701                	li	a4,0
+48210b78:	5afd                	li	s5,-1
+48210b7a:	d84a                	sw	s2,48(sp)
+48210b7c:	da4e                	sw	s3,52(sp)
+48210b7e:	dc6e                	sw	s11,56(sp)
+48210b80:	de62                	sw	s8,60(sp)
+48210b82:	00f48eb3          	add	t4,s1,a5
+48210b86:	4e71                	li	t3,28
+48210b88:	4301                	li	t1,0
+48210b8a:	5891                	li	a7,-28
+48210b8c:	557d                	li	a0,-1
+48210b8e:	4f05                	li	t5,1
+48210b90:	4f81                	li	t6,0
+48210b92:	8dda                	mv	s11,s6
+48210b94:	86a6                	mv	a3,s1
+48210b96:	d23a                	sw	a4,36(sp)
+48210b98:	d43e                	sw	a5,40(sp)
+48210b9a:	01140c33          	add	s8,s0,a7
+48210b9e:	00628a33          	add	s4,t0,t1
+48210ba2:	01c28b33          	add	s6,t0,t3
+48210ba6:	fffe8993          	addi	s3,t4,-1
+48210baa:	006405b3          	add	a1,s0,t1
+48210bae:	01128933          	add	s2,t0,a7
+48210bb2:	01c404b3          	add	s1,s0,t3
+48210bb6:	4605                	li	a2,1
+48210bb8:	c662                	sw	s8,12(sp)
+48210bba:	87d2                	mv	a5,s4
+48210bbc:	c45a                	sw	s6,8(sp)
+48210bbe:	874e                	mv	a4,s3
+48210bc0:	4985                	li	s3,1
+48210bc2:	5b360de3          	beq	a2,s3,4821197c <call_remote+0xe9c>
+48210bc6:	635500e3          	beq	a0,s5,482119e6 <call_remote+0xf06>
+48210bca:	6d0508e3          	beq	a0,a6,48211a9a <call_remote+0xfba>
+48210bce:	49b2                	lw	s3,12(sp)
+48210bd0:	5c02                	lw	s8,32(sp)
+48210bd2:	00038b03          	lb	s6,0(t2)
+48210bd6:	fe358a03          	lb	s4,-29(a1)
+48210bda:	00098983          	lb	s3,0(s3)
+48210bde:	000c0c03          	lb	s8,0(s8)
+48210be2:	036a0a33          	mul	s4,s4,s6
+48210be6:	038989b3          	mul	s3,s3,s8
+48210bea:	013a0b33          	add	s6,s4,s3
+48210bee:	01060a63          	beq	a2,a6,48210c02 <call_remote+0x122>
+48210bf2:	4a72                	lw	s4,28(sp)
+48210bf4:	00090983          	lb	s3,0(s2)
+48210bf8:	000a0a03          	lb	s4,0(s4)
+48210bfc:	034989b3          	mul	s3,s3,s4
+48210c00:	9b4e                	add	s6,s6,s3
+48210c02:	4c42                	lw	s8,16(sp)
+48210c04:	fff58a03          	lb	s4,-1(a1)
+48210c08:	000c8d03          	lb	s10,0(s9)
+48210c0c:	00058983          	lb	s3,0(a1)
+48210c10:	000c0c03          	lb	s8,0(s8)
+48210c14:	03aa0a33          	mul	s4,s4,s10
+48210c18:	038989b3          	mul	s3,s3,s8
+48210c1c:	9a5a                	add	s4,s4,s6
+48210c1e:	99d2                	add	s3,s3,s4
+48210c20:	4b0616e3          	bne	a2,a6,482118cc <call_remote+0xdec>
+48210c24:	030f0e63          	beq	t5,a6,48210c60 <call_remote+0x180>
+48210c28:	4b62                	lw	s6,24(sp)
+48210c2a:	4c52                	lw	s8,20(sp)
+48210c2c:	01b58a03          	lb	s4,27(a1)
+48210c30:	000b0d03          	lb	s10,0(s6)
+48210c34:	000c0c03          	lb	s8,0(s8)
+48210c38:	00048b03          	lb	s6,0(s1)
+48210c3c:	03aa0a33          	mul	s4,s4,s10
+48210c40:	038b0b33          	mul	s6,s6,s8
+48210c44:	9a4e                	add	s4,s4,s3
+48210c46:	014b09b3          	add	s3,s6,s4
+48210c4a:	4a71                	li	s4,28
+48210c4c:	01460a63          	beq	a2,s4,48210c60 <call_remote+0x180>
+48210c50:	4b22                	lw	s6,8(sp)
+48210c52:	00838a03          	lb	s4,8(t2)
+48210c56:	000b0b03          	lb	s6,0(s6)
+48210c5a:	036a0a33          	mul	s4,s4,s6
+48210c5e:	99d2                	add	s3,s3,s4
+48210c60:	000b8a03          	lb	s4,0(s7)
+48210c64:	07f00c13          	li	s8,127
+48210c68:	00c70b33          	add	s6,a4,a2
+48210c6c:	9a4e                	add	s4,s4,s3
+48210c6e:	014c4a63          	blt	s8,s4,48210c82 <call_remote+0x1a2>
+48210c72:	f8000993          	li	s3,-128
+48210c76:	693a43e3          	blt	s4,s3,48211afc <call_remote+0x101c>
+48210c7a:	018a1c13          	slli	s8,s4,0x18
+48210c7e:	418c5c13          	srai	s8,s8,0x18
+48210c82:	49b2                	lw	s3,12(sp)
+48210c84:	018b0023          	sb	s8,0(s6)
+48210c88:	0605                	addi	a2,a2,1
+48210c8a:	0985                	addi	s3,s3,1
+48210c8c:	c64e                	sw	s3,12(sp)
+48210c8e:	49a2                	lw	s3,8(sp)
+48210c90:	0585                	addi	a1,a1,1
+48210c92:	0905                	addi	s2,s2,1
+48210c94:	0985                	addi	s3,s3,1
+48210c96:	c44e                	sw	s3,8(sp)
+48210c98:	49f5                	li	s3,29
+48210c9a:	0785                	addi	a5,a5,1
+48210c9c:	0485                	addi	s1,s1,1
+48210c9e:	f33611e3          	bne	a2,s3,48210bc0 <call_remote+0xe0>
+48210ca2:	0f85                	addi	t6,t6,1
+48210ca4:	0f05                	addi	t5,t5,1
+48210ca6:	0ef1                	addi	t4,t4,28
+48210ca8:	0505                	addi	a0,a0,1
+48210caa:	08f1                	addi	a7,a7,28
+48210cac:	0371                	addi	t1,t1,28
+48210cae:	0e71                	addi	t3,t3,28
+48210cb0:	ef0f95e3          	bne	t6,a6,48210b9a <call_remote+0xba>
+48210cb4:	84b6                	mv	s1,a3
+48210cb6:	5682                	lw	a3,32(sp)
+48210cb8:	5712                	lw	a4,36(sp)
+48210cba:	57a2                	lw	a5,40(sp)
+48210cbc:	06a5                	addi	a3,a3,9
+48210cbe:	d036                	sw	a3,32(sp)
+48210cc0:	46f2                	lw	a3,28(sp)
+48210cc2:	0771                	addi	a4,a4,28
+48210cc4:	8b6e                	mv	s6,s11
+48210cc6:	06a5                	addi	a3,a3,9
+48210cc8:	ce36                	sw	a3,28(sp)
+48210cca:	46c2                	lw	a3,16(sp)
+48210ccc:	0b85                	addi	s7,s7,1
+48210cce:	03a5                	addi	t2,t2,9
+48210cd0:	06a5                	addi	a3,a3,9
+48210cd2:	c836                	sw	a3,16(sp)
+48210cd4:	46d2                	lw	a3,20(sp)
+48210cd6:	31078793          	addi	a5,a5,784
+48210cda:	0ca5                	addi	s9,s9,9
+48210cdc:	06a5                	addi	a3,a3,9
+48210cde:	ca36                	sw	a3,20(sp)
+48210ce0:	46e2                	lw	a3,24(sp)
+48210ce2:	06a5                	addi	a3,a3,9
+48210ce4:	cc36                	sw	a3,24(sp)
+48210ce6:	1c000693          	li	a3,448
+48210cea:	e8d71ce3          	bne	a4,a3,48210b82 <call_remote+0xa2>
+48210cee:	660d                	lui	a2,0x3
+48210cf0:	5942                	lw	s2,48(sp)
+48210cf2:	59d2                	lw	s3,52(sp)
+48210cf4:	5de2                	lw	s11,56(sp)
+48210cf6:	5c72                	lw	s8,60(sp)
+48210cf8:	10060613          	addi	a2,a2,256 # 3100 <temp.c.941c434b+0x2487>
+48210cfc:	9626                	add	a2,a2,s1
+48210cfe:	8726                	mv	a4,s1
+48210d00:	00074783          	lbu	a5,0(a4)
+48210d04:	01879693          	slli	a3,a5,0x18
+48210d08:	86e1                	srai	a3,a3,0x18
+48210d0a:	0006d363          	bgez	a3,48210d10 <call_remote+0x230>
+48210d0e:	4781                	li	a5,0
+48210d10:	00f70023          	sb	a5,0(a4)
+48210d14:	0705                	addi	a4,a4,1
+48210d16:	fec715e3          	bne	a4,a2,48210d00 <call_remote+0x220>
+48210d1a:	630d                	lui	t1,0x3
+48210d1c:	41030313          	addi	t1,t1,1040 # 3410 <temp.c.941c434b+0x2797>
+48210d20:	9326                	add	t1,t1,s1
+48210d22:	31048513          	addi	a0,s1,784
+48210d26:	88a6                	mv	a7,s1
+48210d28:	8826                	mv	a6,s1
+48210d2a:	660d                	lui	a2,0x3
+48210d2c:	86c6                	mv	a3,a7
+48210d2e:	8742                	mv	a4,a6
+48210d30:	87c2                	mv	a5,a6
+48210d32:	0017ce03          	lbu	t3,1(a5)
+48210d36:	01c74583          	lbu	a1,28(a4)
+48210d3a:	00d60eb3          	add	t4,a2,a3
+48210d3e:	018e1f13          	slli	t5,t3,0x18
+48210d42:	01859f93          	slli	t6,a1,0x18
+48210d46:	418f5f13          	srai	t5,t5,0x18
+48210d4a:	418fdf93          	srai	t6,t6,0x18
+48210d4e:	01efd363          	bge	t6,t5,48210d54 <call_remote+0x274>
+48210d52:	85f2                	mv	a1,t3
+48210d54:	0007ce03          	lbu	t3,0(a5)
+48210d58:	01859f93          	slli	t6,a1,0x18
+48210d5c:	418fdf93          	srai	t6,t6,0x18
+48210d60:	018e1f13          	slli	t5,t3,0x18
+48210d64:	418f5f13          	srai	t5,t5,0x18
+48210d68:	01efd363          	bge	t6,t5,48210d6e <call_remote+0x28e>
+48210d6c:	85f2                	mv	a1,t3
+48210d6e:	01d74e03          	lbu	t3,29(a4)
+48210d72:	01859f93          	slli	t6,a1,0x18
+48210d76:	418fdf93          	srai	t6,t6,0x18
+48210d7a:	018e1f13          	slli	t5,t3,0x18
+48210d7e:	418f5f13          	srai	t5,t5,0x18
+48210d82:	01efd363          	bge	t6,t5,48210d88 <call_remote+0x2a8>
+48210d86:	85f2                	mv	a1,t3
+48210d88:	10be8023          	sb	a1,256(t4)
+48210d8c:	0027ce03          	lbu	t3,2(a5)
+48210d90:	0037c583          	lbu	a1,3(a5)
+48210d94:	00d60eb3          	add	t4,a2,a3
+48210d98:	018e1f13          	slli	t5,t3,0x18
+48210d9c:	01859f93          	slli	t6,a1,0x18
+48210da0:	418f5f13          	srai	t5,t5,0x18
+48210da4:	418fdf93          	srai	t6,t6,0x18
+48210da8:	01efd363          	bge	t6,t5,48210dae <call_remote+0x2ce>
+48210dac:	85f2                	mv	a1,t3
+48210dae:	01e74e03          	lbu	t3,30(a4)
+48210db2:	01859f93          	slli	t6,a1,0x18
+48210db6:	418fdf93          	srai	t6,t6,0x18
+48210dba:	018e1f13          	slli	t5,t3,0x18
+48210dbe:	418f5f13          	srai	t5,t5,0x18
+48210dc2:	01efd363          	bge	t6,t5,48210dc8 <call_remote+0x2e8>
+48210dc6:	85f2                	mv	a1,t3
+48210dc8:	01f74e03          	lbu	t3,31(a4)
+48210dcc:	01859f93          	slli	t6,a1,0x18
+48210dd0:	418fdf93          	srai	t6,t6,0x18
+48210dd4:	018e1f13          	slli	t5,t3,0x18
+48210dd8:	418f5f13          	srai	t5,t5,0x18
+48210ddc:	01efd363          	bge	t6,t5,48210de2 <call_remote+0x302>
+48210de0:	85f2                	mv	a1,t3
+48210de2:	10be80a3          	sb	a1,257(t4)
+48210de6:	0047ce03          	lbu	t3,4(a5)
+48210dea:	0057c583          	lbu	a1,5(a5)
+48210dee:	00d60eb3          	add	t4,a2,a3
+48210df2:	018e1f13          	slli	t5,t3,0x18
+48210df6:	01859f93          	slli	t6,a1,0x18
+48210dfa:	418f5f13          	srai	t5,t5,0x18
+48210dfe:	418fdf93          	srai	t6,t6,0x18
+48210e02:	01efd363          	bge	t6,t5,48210e08 <call_remote+0x328>
+48210e06:	85f2                	mv	a1,t3
+48210e08:	02074e03          	lbu	t3,32(a4)
+48210e0c:	01859f93          	slli	t6,a1,0x18
+48210e10:	418fdf93          	srai	t6,t6,0x18
+48210e14:	018e1f13          	slli	t5,t3,0x18
+48210e18:	418f5f13          	srai	t5,t5,0x18
+48210e1c:	01efd363          	bge	t6,t5,48210e22 <call_remote+0x342>
+48210e20:	85f2                	mv	a1,t3
+48210e22:	02174e03          	lbu	t3,33(a4)
+48210e26:	01859f93          	slli	t6,a1,0x18
+48210e2a:	418fdf93          	srai	t6,t6,0x18
+48210e2e:	018e1f13          	slli	t5,t3,0x18
+48210e32:	418f5f13          	srai	t5,t5,0x18
+48210e36:	01efd363          	bge	t6,t5,48210e3c <call_remote+0x35c>
+48210e3a:	85f2                	mv	a1,t3
+48210e3c:	10be8123          	sb	a1,258(t4)
+48210e40:	0067ce03          	lbu	t3,6(a5)
+48210e44:	0077c583          	lbu	a1,7(a5)
+48210e48:	00d60eb3          	add	t4,a2,a3
+48210e4c:	018e1f13          	slli	t5,t3,0x18
+48210e50:	01859f93          	slli	t6,a1,0x18
+48210e54:	418f5f13          	srai	t5,t5,0x18
+48210e58:	418fdf93          	srai	t6,t6,0x18
+48210e5c:	01efd363          	bge	t6,t5,48210e62 <call_remote+0x382>
+48210e60:	85f2                	mv	a1,t3
+48210e62:	02274e03          	lbu	t3,34(a4)
+48210e66:	01859f93          	slli	t6,a1,0x18
+48210e6a:	418fdf93          	srai	t6,t6,0x18
+48210e6e:	018e1f13          	slli	t5,t3,0x18
+48210e72:	418f5f13          	srai	t5,t5,0x18
+48210e76:	01efd363          	bge	t6,t5,48210e7c <call_remote+0x39c>
+48210e7a:	85f2                	mv	a1,t3
+48210e7c:	02374e03          	lbu	t3,35(a4)
+48210e80:	01859f93          	slli	t6,a1,0x18
+48210e84:	418fdf93          	srai	t6,t6,0x18
+48210e88:	018e1f13          	slli	t5,t3,0x18
+48210e8c:	418f5f13          	srai	t5,t5,0x18
+48210e90:	01efd363          	bge	t6,t5,48210e96 <call_remote+0x3b6>
+48210e94:	85f2                	mv	a1,t3
+48210e96:	10be81a3          	sb	a1,259(t4)
+48210e9a:	0087ce03          	lbu	t3,8(a5)
+48210e9e:	0097c583          	lbu	a1,9(a5)
+48210ea2:	00d60eb3          	add	t4,a2,a3
+48210ea6:	018e1f13          	slli	t5,t3,0x18
+48210eaa:	01859f93          	slli	t6,a1,0x18
+48210eae:	418f5f13          	srai	t5,t5,0x18
+48210eb2:	418fdf93          	srai	t6,t6,0x18
+48210eb6:	01efd363          	bge	t6,t5,48210ebc <call_remote+0x3dc>
+48210eba:	85f2                	mv	a1,t3
+48210ebc:	02474e03          	lbu	t3,36(a4)
+48210ec0:	01859f93          	slli	t6,a1,0x18
+48210ec4:	418fdf93          	srai	t6,t6,0x18
+48210ec8:	018e1f13          	slli	t5,t3,0x18
+48210ecc:	418f5f13          	srai	t5,t5,0x18
+48210ed0:	01efd363          	bge	t6,t5,48210ed6 <call_remote+0x3f6>
+48210ed4:	85f2                	mv	a1,t3
+48210ed6:	02574e03          	lbu	t3,37(a4)
+48210eda:	01859f93          	slli	t6,a1,0x18
+48210ede:	418fdf93          	srai	t6,t6,0x18
+48210ee2:	018e1f13          	slli	t5,t3,0x18
+48210ee6:	418f5f13          	srai	t5,t5,0x18
+48210eea:	01efd363          	bge	t6,t5,48210ef0 <call_remote+0x410>
+48210eee:	85f2                	mv	a1,t3
+48210ef0:	10be8223          	sb	a1,260(t4)
+48210ef4:	00a7ce03          	lbu	t3,10(a5)
+48210ef8:	00b7c583          	lbu	a1,11(a5)
+48210efc:	00d60eb3          	add	t4,a2,a3
+48210f00:	018e1f13          	slli	t5,t3,0x18
+48210f04:	01859f93          	slli	t6,a1,0x18
+48210f08:	418f5f13          	srai	t5,t5,0x18
+48210f0c:	418fdf93          	srai	t6,t6,0x18
+48210f10:	01efd363          	bge	t6,t5,48210f16 <call_remote+0x436>
+48210f14:	85f2                	mv	a1,t3
+48210f16:	02674e03          	lbu	t3,38(a4)
+48210f1a:	01859f93          	slli	t6,a1,0x18
+48210f1e:	418fdf93          	srai	t6,t6,0x18
+48210f22:	018e1f13          	slli	t5,t3,0x18
+48210f26:	418f5f13          	srai	t5,t5,0x18
+48210f2a:	01efd363          	bge	t6,t5,48210f30 <call_remote+0x450>
+48210f2e:	85f2                	mv	a1,t3
+48210f30:	02774e03          	lbu	t3,39(a4)
+48210f34:	01859f93          	slli	t6,a1,0x18
+48210f38:	418fdf93          	srai	t6,t6,0x18
+48210f3c:	018e1f13          	slli	t5,t3,0x18
+48210f40:	418f5f13          	srai	t5,t5,0x18
+48210f44:	01efd363          	bge	t6,t5,48210f4a <call_remote+0x46a>
+48210f48:	85f2                	mv	a1,t3
+48210f4a:	10be82a3          	sb	a1,261(t4)
+48210f4e:	00c7ce03          	lbu	t3,12(a5)
+48210f52:	00d7c583          	lbu	a1,13(a5)
+48210f56:	00d60eb3          	add	t4,a2,a3
+48210f5a:	018e1f13          	slli	t5,t3,0x18
+48210f5e:	01859f93          	slli	t6,a1,0x18
+48210f62:	418f5f13          	srai	t5,t5,0x18
+48210f66:	418fdf93          	srai	t6,t6,0x18
+48210f6a:	01efd363          	bge	t6,t5,48210f70 <call_remote+0x490>
+48210f6e:	85f2                	mv	a1,t3
+48210f70:	02874e03          	lbu	t3,40(a4)
+48210f74:	01859f93          	slli	t6,a1,0x18
+48210f78:	418fdf93          	srai	t6,t6,0x18
+48210f7c:	018e1f13          	slli	t5,t3,0x18
+48210f80:	418f5f13          	srai	t5,t5,0x18
+48210f84:	01efd363          	bge	t6,t5,48210f8a <call_remote+0x4aa>
+48210f88:	85f2                	mv	a1,t3
+48210f8a:	02974e03          	lbu	t3,41(a4)
+48210f8e:	01859f93          	slli	t6,a1,0x18
+48210f92:	418fdf93          	srai	t6,t6,0x18
+48210f96:	018e1f13          	slli	t5,t3,0x18
+48210f9a:	418f5f13          	srai	t5,t5,0x18
+48210f9e:	01efd363          	bge	t6,t5,48210fa4 <call_remote+0x4c4>
+48210fa2:	85f2                	mv	a1,t3
+48210fa4:	10be8323          	sb	a1,262(t4)
+48210fa8:	00f7ce03          	lbu	t3,15(a5)
+48210fac:	00e7c583          	lbu	a1,14(a5)
+48210fb0:	00d60eb3          	add	t4,a2,a3
+48210fb4:	018e1f13          	slli	t5,t3,0x18
+48210fb8:	01859f93          	slli	t6,a1,0x18
+48210fbc:	418f5f13          	srai	t5,t5,0x18
+48210fc0:	418fdf93          	srai	t6,t6,0x18
+48210fc4:	01efd363          	bge	t6,t5,48210fca <call_remote+0x4ea>
+48210fc8:	85f2                	mv	a1,t3
+48210fca:	02a74e03          	lbu	t3,42(a4)
+48210fce:	01859f93          	slli	t6,a1,0x18
+48210fd2:	418fdf93          	srai	t6,t6,0x18
+48210fd6:	018e1f13          	slli	t5,t3,0x18
+48210fda:	418f5f13          	srai	t5,t5,0x18
+48210fde:	01efd363          	bge	t6,t5,48210fe4 <call_remote+0x504>
+48210fe2:	85f2                	mv	a1,t3
+48210fe4:	02b74e03          	lbu	t3,43(a4)
+48210fe8:	01859f93          	slli	t6,a1,0x18
+48210fec:	418fdf93          	srai	t6,t6,0x18
+48210ff0:	018e1f13          	slli	t5,t3,0x18
+48210ff4:	418f5f13          	srai	t5,t5,0x18
+48210ff8:	01efd363          	bge	t6,t5,48210ffe <call_remote+0x51e>
+48210ffc:	85f2                	mv	a1,t3
+48210ffe:	10be83a3          	sb	a1,263(t4)
+48211002:	0117ce03          	lbu	t3,17(a5)
+48211006:	0107c583          	lbu	a1,16(a5)
+4821100a:	00d60eb3          	add	t4,a2,a3
+4821100e:	018e1f13          	slli	t5,t3,0x18
+48211012:	01859f93          	slli	t6,a1,0x18
+48211016:	418f5f13          	srai	t5,t5,0x18
+4821101a:	418fdf93          	srai	t6,t6,0x18
+4821101e:	01efd363          	bge	t6,t5,48211024 <call_remote+0x544>
+48211022:	85f2                	mv	a1,t3
+48211024:	02c74e03          	lbu	t3,44(a4)
+48211028:	01859f93          	slli	t6,a1,0x18
+4821102c:	418fdf93          	srai	t6,t6,0x18
+48211030:	018e1f13          	slli	t5,t3,0x18
+48211034:	418f5f13          	srai	t5,t5,0x18
+48211038:	01efd363          	bge	t6,t5,4821103e <call_remote+0x55e>
+4821103c:	85f2                	mv	a1,t3
+4821103e:	02d74e03          	lbu	t3,45(a4)
+48211042:	01859f93          	slli	t6,a1,0x18
+48211046:	418fdf93          	srai	t6,t6,0x18
+4821104a:	018e1f13          	slli	t5,t3,0x18
+4821104e:	418f5f13          	srai	t5,t5,0x18
+48211052:	01efd363          	bge	t6,t5,48211058 <call_remote+0x578>
+48211056:	85f2                	mv	a1,t3
+48211058:	10be8423          	sb	a1,264(t4)
+4821105c:	0137ce03          	lbu	t3,19(a5)
+48211060:	0127c583          	lbu	a1,18(a5)
+48211064:	00d60eb3          	add	t4,a2,a3
+48211068:	018e1f13          	slli	t5,t3,0x18
+4821106c:	01859f93          	slli	t6,a1,0x18
+48211070:	418f5f13          	srai	t5,t5,0x18
+48211074:	418fdf93          	srai	t6,t6,0x18
+48211078:	01efd363          	bge	t6,t5,4821107e <call_remote+0x59e>
+4821107c:	85f2                	mv	a1,t3
+4821107e:	02e74e03          	lbu	t3,46(a4)
+48211082:	01859f93          	slli	t6,a1,0x18
+48211086:	418fdf93          	srai	t6,t6,0x18
+4821108a:	018e1f13          	slli	t5,t3,0x18
+4821108e:	418f5f13          	srai	t5,t5,0x18
+48211092:	01efd363          	bge	t6,t5,48211098 <call_remote+0x5b8>
+48211096:	85f2                	mv	a1,t3
+48211098:	02f74e03          	lbu	t3,47(a4)
+4821109c:	01859f93          	slli	t6,a1,0x18
+482110a0:	418fdf93          	srai	t6,t6,0x18
+482110a4:	018e1f13          	slli	t5,t3,0x18
+482110a8:	418f5f13          	srai	t5,t5,0x18
+482110ac:	01efd363          	bge	t6,t5,482110b2 <call_remote+0x5d2>
+482110b0:	85f2                	mv	a1,t3
+482110b2:	10be84a3          	sb	a1,265(t4)
+482110b6:	0157ce03          	lbu	t3,21(a5)
+482110ba:	0147c583          	lbu	a1,20(a5)
+482110be:	00d60eb3          	add	t4,a2,a3
+482110c2:	018e1f13          	slli	t5,t3,0x18
+482110c6:	01859f93          	slli	t6,a1,0x18
+482110ca:	418f5f13          	srai	t5,t5,0x18
+482110ce:	418fdf93          	srai	t6,t6,0x18
+482110d2:	01efd363          	bge	t6,t5,482110d8 <call_remote+0x5f8>
+482110d6:	85f2                	mv	a1,t3
+482110d8:	03074e03          	lbu	t3,48(a4)
+482110dc:	01859f93          	slli	t6,a1,0x18
+482110e0:	418fdf93          	srai	t6,t6,0x18
+482110e4:	018e1f13          	slli	t5,t3,0x18
+482110e8:	418f5f13          	srai	t5,t5,0x18
+482110ec:	01efd363          	bge	t6,t5,482110f2 <call_remote+0x612>
+482110f0:	85f2                	mv	a1,t3
+482110f2:	03174e03          	lbu	t3,49(a4)
+482110f6:	01859f93          	slli	t6,a1,0x18
+482110fa:	418fdf93          	srai	t6,t6,0x18
+482110fe:	018e1f13          	slli	t5,t3,0x18
+48211102:	418f5f13          	srai	t5,t5,0x18
+48211106:	01efd363          	bge	t6,t5,4821110c <call_remote+0x62c>
+4821110a:	85f2                	mv	a1,t3
+4821110c:	10be8523          	sb	a1,266(t4)
+48211110:	0177ce03          	lbu	t3,23(a5)
+48211114:	0167c583          	lbu	a1,22(a5)
+48211118:	00d60eb3          	add	t4,a2,a3
+4821111c:	018e1f13          	slli	t5,t3,0x18
+48211120:	01859f93          	slli	t6,a1,0x18
+48211124:	418f5f13          	srai	t5,t5,0x18
+48211128:	418fdf93          	srai	t6,t6,0x18
+4821112c:	01efd363          	bge	t6,t5,48211132 <call_remote+0x652>
+48211130:	85f2                	mv	a1,t3
+48211132:	03274e03          	lbu	t3,50(a4)
+48211136:	01859f93          	slli	t6,a1,0x18
+4821113a:	418fdf93          	srai	t6,t6,0x18
+4821113e:	018e1f13          	slli	t5,t3,0x18
+48211142:	418f5f13          	srai	t5,t5,0x18
+48211146:	01efd363          	bge	t6,t5,4821114c <call_remote+0x66c>
+4821114a:	85f2                	mv	a1,t3
+4821114c:	03374e03          	lbu	t3,51(a4)
+48211150:	01859f93          	slli	t6,a1,0x18
+48211154:	418fdf93          	srai	t6,t6,0x18
+48211158:	018e1f13          	slli	t5,t3,0x18
+4821115c:	418f5f13          	srai	t5,t5,0x18
+48211160:	01efd363          	bge	t6,t5,48211166 <call_remote+0x686>
+48211164:	85f2                	mv	a1,t3
+48211166:	10be85a3          	sb	a1,267(t4)
+4821116a:	0197ce03          	lbu	t3,25(a5)
+4821116e:	0187c583          	lbu	a1,24(a5)
+48211172:	00d60eb3          	add	t4,a2,a3
+48211176:	018e1f13          	slli	t5,t3,0x18
+4821117a:	01859f93          	slli	t6,a1,0x18
+4821117e:	418f5f13          	srai	t5,t5,0x18
+48211182:	418fdf93          	srai	t6,t6,0x18
+48211186:	01efd363          	bge	t6,t5,4821118c <call_remote+0x6ac>
+4821118a:	85f2                	mv	a1,t3
+4821118c:	03474e03          	lbu	t3,52(a4)
+48211190:	01859f93          	slli	t6,a1,0x18
+48211194:	418fdf93          	srai	t6,t6,0x18
+48211198:	018e1f13          	slli	t5,t3,0x18
+4821119c:	418f5f13          	srai	t5,t5,0x18
+482111a0:	01efd363          	bge	t6,t5,482111a6 <call_remote+0x6c6>
+482111a4:	85f2                	mv	a1,t3
+482111a6:	03574e03          	lbu	t3,53(a4)
+482111aa:	01859f93          	slli	t6,a1,0x18
+482111ae:	418fdf93          	srai	t6,t6,0x18
+482111b2:	018e1f13          	slli	t5,t3,0x18
+482111b6:	418f5f13          	srai	t5,t5,0x18
+482111ba:	01efd363          	bge	t6,t5,482111c0 <call_remote+0x6e0>
+482111be:	85f2                	mv	a1,t3
+482111c0:	10be8623          	sb	a1,268(t4)
+482111c4:	01b7ce03          	lbu	t3,27(a5)
+482111c8:	01a7c583          	lbu	a1,26(a5)
+482111cc:	00d60eb3          	add	t4,a2,a3
+482111d0:	018e1f13          	slli	t5,t3,0x18
+482111d4:	01859f93          	slli	t6,a1,0x18
+482111d8:	418f5f13          	srai	t5,t5,0x18
+482111dc:	418fdf93          	srai	t6,t6,0x18
+482111e0:	01efd363          	bge	t6,t5,482111e6 <call_remote+0x706>
+482111e4:	85f2                	mv	a1,t3
+482111e6:	03674e03          	lbu	t3,54(a4)
+482111ea:	01859f93          	slli	t6,a1,0x18
+482111ee:	418fdf93          	srai	t6,t6,0x18
+482111f2:	018e1f13          	slli	t5,t3,0x18
+482111f6:	418f5f13          	srai	t5,t5,0x18
+482111fa:	01efd363          	bge	t6,t5,48211200 <call_remote+0x720>
+482111fe:	85f2                	mv	a1,t3
+48211200:	03774e03          	lbu	t3,55(a4)
+48211204:	01859f93          	slli	t6,a1,0x18
+48211208:	418fdf93          	srai	t6,t6,0x18
+4821120c:	018e1f13          	slli	t5,t3,0x18
+48211210:	418f5f13          	srai	t5,t5,0x18
+48211214:	01efd363          	bge	t6,t5,4821121a <call_remote+0x73a>
+48211218:	85f2                	mv	a1,t3
+4821121a:	10be86a3          	sb	a1,269(t4)
+4821121e:	03878793          	addi	a5,a5,56
+48211222:	03870713          	addi	a4,a4,56
+48211226:	06b9                	addi	a3,a3,14
+48211228:	b0a795e3          	bne	a5,a0,48210d32 <call_remote+0x252>
+4821122c:	31078513          	addi	a0,a5,784
+48211230:	31080813          	addi	a6,a6,784
+48211234:	0c488893          	addi	a7,a7,196
+48211238:	ae651ae3          	bne	a0,t1,48210d2c <call_remote+0x24c>
+4821123c:	48212537          	lui	a0,0x48212
+48211240:	b8050513          	addi	a0,a0,-1152 # 48211b80 <call_remote+0x10a0>
+48211244:	f7e06097          	auipc	ra,0xf7e06
+48211248:	c18080e7          	jalr	-1000(ra) # 40016e5c <printf>
+4821124c:	6785                	lui	a5,0x1
+4821124e:	76fd                	lui	a3,0xfffff
+48211250:	6e11                	lui	t3,0x4
+48211252:	20078793          	addi	a5,a5,512 # 1200 <temp.c.941c434b+0x587>
+48211256:	8736                	mv	a4,a3
+48211258:	97ca                	add	a5,a5,s2
+4821125a:	3c068693          	addi	a3,a3,960 # fffff3c0 <EFUSE+0xafed23c0>
+4821125e:	d31e0e13          	addi	t3,t3,-719 # 3d31 <temp.c.941c434b+0x30b8>
+48211262:	6a11                	lui	s4,0x4
+48211264:	83ca                	mv	t2,s2
+48211266:	cc36                	sw	a3,24(sp)
+48211268:	8626                	mv	a2,s1
+4821126a:	9e26                	add	t3,t3,s1
+4821126c:	d3fa0a13          	addi	s4,s4,-705 # 3d3f <temp.c.941c434b+0x30c6>
+48211270:	3c170d13          	addi	s10,a4,961
+48211274:	3cf70b93          	addi	s7,a4,975
+48211278:	597d                	li	s2,-1
+4821127a:	46b9                	li	a3,14
+4821127c:	07f00293          	li	t0,127
+48211280:	f8000413          	li	s0,-128
+48211284:	ce6e                	sw	s11,28(sp)
+48211286:	d062                	sw	s8,32(sp)
+48211288:	88da                	mv	a7,s6
+4821128a:	8ebe                	mv	t4,a5
+4821128c:	6b11                	lui	s6,0x4
+4821128e:	8ca6                	mv	s9,s1
+48211290:	d4db0b13          	addi	s6,s6,-691 # 3d4d <temp.c.941c434b+0x30d4>
+48211294:	8f32                	mv	t5,a2
+48211296:	4301                	li	t1,0
+48211298:	587d                	li	a6,-1
+4821129a:	4f85                	li	t6,1
+4821129c:	4501                	li	a0,0
+4821129e:	84b2                	mv	s1,a2
+482112a0:	4785                	li	a5,1
+482112a2:	014f0c33          	add	s8,t5,s4
+482112a6:	006e0733          	add	a4,t3,t1
+482112aa:	8de6                	mv	s11,s9
+482112ac:	c81a                	sw	t1,16(sp)
+482112ae:	0505                	addi	a0,a0,1
+482112b0:	5afd                	li	s5,-1
+482112b2:	8cc6                	mv	s9,a7
+482112b4:	833e                	mv	t1,a5
+482112b6:	ca62                	sw	s8,20(sp)
+482112b8:	632a8b63          	beq	s5,s2,482118ee <call_remote+0xe0e>
+482112bc:	47e2                	lw	a5,24(sp)
+482112be:	8c1e                	mv	s8,t2
+482112c0:	c466                	sw	s9,8(sp)
+482112c2:	00f708b3          	add	a7,a4,a5
+482112c6:	c66e                	sw	s11,12(sp)
+482112c8:	4781                	li	a5,0
+482112ca:	03280c63          	beq	a6,s2,48211302 <call_remote+0x822>
+482112ce:	7ad80f63          	beq	a6,a3,48211a8c <call_remote+0xfac>
+482112d2:	000c0583          	lb	a1,0(s8)
+482112d6:	00088603          	lb	a2,0(a7)
+482112da:	001c0d83          	lb	s11,1(s8)
+482112de:	00188c83          	lb	s9,1(a7)
+482112e2:	02c58633          	mul	a2,a1,a2
+482112e6:	039d85b3          	mul	a1,s11,s9
+482112ea:	963e                	add	a2,a2,a5
+482112ec:	00c587b3          	add	a5,a1,a2
+482112f0:	00d30963          	beq	t1,a3,48211302 <call_remote+0x822>
+482112f4:	002c0603          	lb	a2,2(s8)
+482112f8:	00288583          	lb	a1,2(a7)
+482112fc:	02b60633          	mul	a2,a2,a1
+48211300:	97b2                	add	a5,a5,a2
+48211302:	003c0603          	lb	a2,3(s8)
+48211306:	00e88d83          	lb	s11,14(a7)
+4821130a:	004c0583          	lb	a1,4(s8)
+4821130e:	00f88c83          	lb	s9,15(a7)
+48211312:	03b60633          	mul	a2,a2,s11
+48211316:	039585b3          	mul	a1,a1,s9
+4821131a:	963e                	add	a2,a2,a5
+4821131c:	00c587b3          	add	a5,a1,a2
+48211320:	5ad31f63          	bne	t1,a3,482118de <call_remote+0xdfe>
+48211324:	02df8a63          	beq	t6,a3,48211358 <call_remote+0x878>
+48211328:	01c88603          	lb	a2,28(a7)
+4821132c:	006c0d83          	lb	s11,6(s8)
+48211330:	01d88583          	lb	a1,29(a7)
+48211334:	007c0c83          	lb	s9,7(s8)
+48211338:	03b60633          	mul	a2,a2,s11
+4821133c:	039585b3          	mul	a1,a1,s9
+48211340:	963e                	add	a2,a2,a5
+48211342:	00c587b3          	add	a5,a1,a2
+48211346:	00d30963          	beq	t1,a3,48211358 <call_remote+0x878>
+4821134a:	01e88603          	lb	a2,30(a7)
+4821134e:	008c0583          	lb	a1,8(s8)
+48211352:	02b60633          	mul	a2,a2,a1
+48211356:	97b2                	add	a5,a5,a2
+48211358:	0c488893          	addi	a7,a7,196
+4821135c:	0c25                	addi	s8,s8,9
+4821135e:	f6e896e3          	bne	a7,a4,482112ca <call_remote+0x7ea>
+48211362:	4ca2                	lw	s9,8(sp)
+48211364:	4db2                	lw	s11,12(sp)
+48211366:	00098583          	lb	a1,0(s3)
+4821136a:	4652                	lw	a2,20(sp)
+4821136c:	07f00893          	li	a7,127
+48211370:	95be                	add	a1,a1,a5
+48211372:	00660c33          	add	s8,a2,t1
+48211376:	00b2c863          	blt	t0,a1,48211386 <call_remote+0x8a6>
+4821137a:	7885c563          	blt	a1,s0,48211b04 <call_remote+0x1024>
+4821137e:	01859893          	slli	a7,a1,0x18
+48211382:	4188d893          	srai	a7,a7,0x18
+48211386:	011c0023          	sb	a7,0(s8)
+4821138a:	0305                	addi	t1,t1,1
+4821138c:	47bd                	li	a5,15
+4821138e:	0a85                	addi	s5,s5,1
+48211390:	0705                	addi	a4,a4,1
+48211392:	f2f313e3          	bne	t1,a5,482112b8 <call_remote+0x7d8>
+48211396:	4342                	lw	t1,16(sp)
+48211398:	88e6                	mv	a7,s9
+4821139a:	0f85                	addi	t6,t6,1
+4821139c:	8cee                	mv	s9,s11
+4821139e:	0f39                	addi	t5,t5,14
+482113a0:	0805                	addi	a6,a6,1
+482113a2:	0339                	addi	t1,t1,14
+482113a4:	eed51ee3          	bne	a0,a3,482112a0 <call_remote+0x7c0>
+482113a8:	8626                	mv	a2,s1
+482113aa:	09038393          	addi	t2,t2,144
+482113ae:	84e6                	mv	s1,s9
+482113b0:	0985                	addi	s3,s3,1
+482113b2:	0c460613          	addi	a2,a2,196 # 30c4 <temp.c.941c434b+0x244b>
+482113b6:	edd39be3          	bne	t2,t4,4821128c <call_remote+0x7ac>
+482113ba:	6711                	lui	a4,0x4
+482113bc:	6415                	lui	s0,0x5
+482113be:	4df2                	lw	s11,28(sp)
+482113c0:	5c02                	lw	s8,32(sp)
+482113c2:	d4070713          	addi	a4,a4,-704 # 3d40 <temp.c.941c434b+0x30c7>
+482113c6:	5c040413          	addi	s0,s0,1472 # 55c0 <temp.c.941c434b+0x4947>
+482113ca:	8b46                	mv	s6,a7
+482113cc:	9766                	add	a4,a4,s9
+482113ce:	9466                	add	s0,s0,s9
+482113d0:	00074783          	lbu	a5,0(a4)
+482113d4:	01879693          	slli	a3,a5,0x18
+482113d8:	86e1                	srai	a3,a3,0x18
+482113da:	0006d363          	bgez	a3,482113e0 <call_remote+0x900>
+482113de:	4781                	li	a5,0
+482113e0:	00f70023          	sb	a5,0(a4)
+482113e4:	0705                	addi	a4,a4,1
+482113e6:	fe8715e3          	bne	a4,s0,482113d0 <call_remote+0x8f0>
+482113ea:	6e09                	lui	t3,0x2
+482113ec:	944e0e13          	addi	t3,t3,-1724 # 1944 <temp.c.941c434b+0xccb>
+482113f0:	9e26                	add	t3,t3,s1
+482113f2:	0c448813          	addi	a6,s1,196
+482113f6:	8326                	mv	t1,s1
+482113f8:	88a6                	mv	a7,s1
+482113fa:	6515                	lui	a0,0x5
+482113fc:	6791                	lui	a5,0x4
+482113fe:	859a                	mv	a1,t1
+48211400:	8746                	mv	a4,a7
+48211402:	8646                	mv	a2,a7
+48211404:	00c786b3          	add	a3,a5,a2
+48211408:	d416ce83          	lbu	t4,-703(a3)
+4821140c:	d406c683          	lbu	a3,-704(a3)
+48211410:	00b50f33          	add	t5,a0,a1
+48211414:	018e9f93          	slli	t6,t4,0x18
+48211418:	01869293          	slli	t0,a3,0x18
+4821141c:	418fdf93          	srai	t6,t6,0x18
+48211420:	4182d293          	srai	t0,t0,0x18
+48211424:	01f2d363          	bge	t0,t6,4821142a <call_remote+0x94a>
+48211428:	86f6                	mv	a3,t4
+4821142a:	00e78eb3          	add	t4,a5,a4
+4821142e:	d4eece83          	lbu	t4,-690(t4)
+48211432:	01869293          	slli	t0,a3,0x18
+48211436:	4182d293          	srai	t0,t0,0x18
+4821143a:	018e9f93          	slli	t6,t4,0x18
+4821143e:	418fdf93          	srai	t6,t6,0x18
+48211442:	01f2d363          	bge	t0,t6,48211448 <call_remote+0x968>
+48211446:	86f6                	mv	a3,t4
+48211448:	00e78eb3          	add	t4,a5,a4
+4821144c:	d4fece83          	lbu	t4,-689(t4)
+48211450:	01869293          	slli	t0,a3,0x18
+48211454:	4182d293          	srai	t0,t0,0x18
+48211458:	018e9f93          	slli	t6,t4,0x18
+4821145c:	418fdf93          	srai	t6,t6,0x18
+48211460:	01f2d363          	bge	t0,t6,48211466 <call_remote+0x986>
+48211464:	86f6                	mv	a3,t4
+48211466:	5cdf0023          	sb	a3,1472(t5)
+4821146a:	00c786b3          	add	a3,a5,a2
+4821146e:	d436ce83          	lbu	t4,-701(a3)
+48211472:	d426c683          	lbu	a3,-702(a3)
+48211476:	00b50f33          	add	t5,a0,a1
+4821147a:	018e9f93          	slli	t6,t4,0x18
+4821147e:	01869293          	slli	t0,a3,0x18
+48211482:	418fdf93          	srai	t6,t6,0x18
+48211486:	4182d293          	srai	t0,t0,0x18
+4821148a:	01f2d363          	bge	t0,t6,48211490 <call_remote+0x9b0>
+4821148e:	86f6                	mv	a3,t4
+48211490:	00e78eb3          	add	t4,a5,a4
+48211494:	d50ece83          	lbu	t4,-688(t4)
+48211498:	01869293          	slli	t0,a3,0x18
+4821149c:	4182d293          	srai	t0,t0,0x18
+482114a0:	018e9f93          	slli	t6,t4,0x18
+482114a4:	418fdf93          	srai	t6,t6,0x18
+482114a8:	01f2d363          	bge	t0,t6,482114ae <call_remote+0x9ce>
+482114ac:	86f6                	mv	a3,t4
+482114ae:	00e78eb3          	add	t4,a5,a4
+482114b2:	d51ece83          	lbu	t4,-687(t4)
+482114b6:	01869293          	slli	t0,a3,0x18
+482114ba:	4182d293          	srai	t0,t0,0x18
+482114be:	018e9f93          	slli	t6,t4,0x18
+482114c2:	418fdf93          	srai	t6,t6,0x18
+482114c6:	01f2d363          	bge	t0,t6,482114cc <call_remote+0x9ec>
+482114ca:	86f6                	mv	a3,t4
+482114cc:	5cdf00a3          	sb	a3,1473(t5)
+482114d0:	00c786b3          	add	a3,a5,a2
+482114d4:	d456ce83          	lbu	t4,-699(a3)
+482114d8:	d446c683          	lbu	a3,-700(a3)
+482114dc:	00b50f33          	add	t5,a0,a1
+482114e0:	018e9f93          	slli	t6,t4,0x18
+482114e4:	01869293          	slli	t0,a3,0x18
+482114e8:	418fdf93          	srai	t6,t6,0x18
+482114ec:	4182d293          	srai	t0,t0,0x18
+482114f0:	01f2d363          	bge	t0,t6,482114f6 <call_remote+0xa16>
+482114f4:	86f6                	mv	a3,t4
+482114f6:	00e78eb3          	add	t4,a5,a4
+482114fa:	d52ece83          	lbu	t4,-686(t4)
+482114fe:	01869293          	slli	t0,a3,0x18
+48211502:	4182d293          	srai	t0,t0,0x18
+48211506:	018e9f93          	slli	t6,t4,0x18
+4821150a:	418fdf93          	srai	t6,t6,0x18
+4821150e:	01f2d363          	bge	t0,t6,48211514 <call_remote+0xa34>
+48211512:	86f6                	mv	a3,t4
+48211514:	00e78eb3          	add	t4,a5,a4
+48211518:	d53ece83          	lbu	t4,-685(t4)
+4821151c:	01869293          	slli	t0,a3,0x18
+48211520:	4182d293          	srai	t0,t0,0x18
+48211524:	018e9f93          	slli	t6,t4,0x18
+48211528:	418fdf93          	srai	t6,t6,0x18
+4821152c:	01f2d363          	bge	t0,t6,48211532 <call_remote+0xa52>
+48211530:	86f6                	mv	a3,t4
+48211532:	5cdf0123          	sb	a3,1474(t5)
+48211536:	00c786b3          	add	a3,a5,a2
+4821153a:	d476ce83          	lbu	t4,-697(a3)
+4821153e:	d466c683          	lbu	a3,-698(a3)
+48211542:	00b50f33          	add	t5,a0,a1
+48211546:	018e9f93          	slli	t6,t4,0x18
+4821154a:	01869293          	slli	t0,a3,0x18
+4821154e:	418fdf93          	srai	t6,t6,0x18
+48211552:	4182d293          	srai	t0,t0,0x18
+48211556:	01f2d363          	bge	t0,t6,4821155c <call_remote+0xa7c>
+4821155a:	86f6                	mv	a3,t4
+4821155c:	00e78eb3          	add	t4,a5,a4
+48211560:	d54ece83          	lbu	t4,-684(t4)
+48211564:	01869293          	slli	t0,a3,0x18
+48211568:	4182d293          	srai	t0,t0,0x18
+4821156c:	018e9f93          	slli	t6,t4,0x18
+48211570:	418fdf93          	srai	t6,t6,0x18
+48211574:	01f2d363          	bge	t0,t6,4821157a <call_remote+0xa9a>
+48211578:	86f6                	mv	a3,t4
+4821157a:	00e78eb3          	add	t4,a5,a4
+4821157e:	d55ece83          	lbu	t4,-683(t4)
+48211582:	01869293          	slli	t0,a3,0x18
+48211586:	4182d293          	srai	t0,t0,0x18
+4821158a:	018e9f93          	slli	t6,t4,0x18
+4821158e:	418fdf93          	srai	t6,t6,0x18
+48211592:	01f2d363          	bge	t0,t6,48211598 <call_remote+0xab8>
+48211596:	86f6                	mv	a3,t4
+48211598:	5cdf01a3          	sb	a3,1475(t5)
+4821159c:	00c786b3          	add	a3,a5,a2
+482115a0:	d496ce83          	lbu	t4,-695(a3)
+482115a4:	d486c683          	lbu	a3,-696(a3)
+482115a8:	00b50f33          	add	t5,a0,a1
+482115ac:	018e9f93          	slli	t6,t4,0x18
+482115b0:	01869293          	slli	t0,a3,0x18
+482115b4:	418fdf93          	srai	t6,t6,0x18
+482115b8:	4182d293          	srai	t0,t0,0x18
+482115bc:	01f2d363          	bge	t0,t6,482115c2 <call_remote+0xae2>
+482115c0:	86f6                	mv	a3,t4
+482115c2:	00e78eb3          	add	t4,a5,a4
+482115c6:	d56ece83          	lbu	t4,-682(t4)
+482115ca:	01869293          	slli	t0,a3,0x18
+482115ce:	4182d293          	srai	t0,t0,0x18
+482115d2:	018e9f93          	slli	t6,t4,0x18
+482115d6:	418fdf93          	srai	t6,t6,0x18
+482115da:	01f2d363          	bge	t0,t6,482115e0 <call_remote+0xb00>
+482115de:	86f6                	mv	a3,t4
+482115e0:	00e78eb3          	add	t4,a5,a4
+482115e4:	d57ece83          	lbu	t4,-681(t4)
+482115e8:	01869293          	slli	t0,a3,0x18
+482115ec:	4182d293          	srai	t0,t0,0x18
+482115f0:	018e9f93          	slli	t6,t4,0x18
+482115f4:	418fdf93          	srai	t6,t6,0x18
+482115f8:	01f2d363          	bge	t0,t6,482115fe <call_remote+0xb1e>
+482115fc:	86f6                	mv	a3,t4
+482115fe:	5cdf0223          	sb	a3,1476(t5)
+48211602:	00c786b3          	add	a3,a5,a2
+48211606:	d4b6ce83          	lbu	t4,-693(a3)
+4821160a:	d4a6c683          	lbu	a3,-694(a3)
+4821160e:	00b50f33          	add	t5,a0,a1
+48211612:	018e9f93          	slli	t6,t4,0x18
+48211616:	01869293          	slli	t0,a3,0x18
+4821161a:	418fdf93          	srai	t6,t6,0x18
+4821161e:	4182d293          	srai	t0,t0,0x18
+48211622:	01f2d363          	bge	t0,t6,48211628 <call_remote+0xb48>
+48211626:	86f6                	mv	a3,t4
+48211628:	00e78eb3          	add	t4,a5,a4
+4821162c:	d58ece83          	lbu	t4,-680(t4)
+48211630:	01869293          	slli	t0,a3,0x18
+48211634:	4182d293          	srai	t0,t0,0x18
+48211638:	018e9f93          	slli	t6,t4,0x18
+4821163c:	418fdf93          	srai	t6,t6,0x18
+48211640:	01f2d363          	bge	t0,t6,48211646 <call_remote+0xb66>
+48211644:	86f6                	mv	a3,t4
+48211646:	00e78eb3          	add	t4,a5,a4
+4821164a:	d59ece83          	lbu	t4,-679(t4)
+4821164e:	01869293          	slli	t0,a3,0x18
+48211652:	4182d293          	srai	t0,t0,0x18
+48211656:	018e9f93          	slli	t6,t4,0x18
+4821165a:	418fdf93          	srai	t6,t6,0x18
+4821165e:	01f2d363          	bge	t0,t6,48211664 <call_remote+0xb84>
+48211662:	86f6                	mv	a3,t4
+48211664:	5cdf02a3          	sb	a3,1477(t5)
+48211668:	00c786b3          	add	a3,a5,a2
+4821166c:	d4d6ce83          	lbu	t4,-691(a3)
+48211670:	d4c6c683          	lbu	a3,-692(a3)
+48211674:	00b50f33          	add	t5,a0,a1
+48211678:	018e9f93          	slli	t6,t4,0x18
+4821167c:	01869293          	slli	t0,a3,0x18
+48211680:	418fdf93          	srai	t6,t6,0x18
+48211684:	4182d293          	srai	t0,t0,0x18
+48211688:	01f2d363          	bge	t0,t6,4821168e <call_remote+0xbae>
+4821168c:	86f6                	mv	a3,t4
+4821168e:	00e78eb3          	add	t4,a5,a4
+48211692:	d5aece83          	lbu	t4,-678(t4)
+48211696:	01869293          	slli	t0,a3,0x18
+4821169a:	4182d293          	srai	t0,t0,0x18
+4821169e:	018e9f93          	slli	t6,t4,0x18
+482116a2:	418fdf93          	srai	t6,t6,0x18
+482116a6:	01f2d363          	bge	t0,t6,482116ac <call_remote+0xbcc>
+482116aa:	86f6                	mv	a3,t4
+482116ac:	00e78eb3          	add	t4,a5,a4
+482116b0:	d5bece83          	lbu	t4,-677(t4)
+482116b4:	01869293          	slli	t0,a3,0x18
+482116b8:	4182d293          	srai	t0,t0,0x18
+482116bc:	018e9f93          	slli	t6,t4,0x18
+482116c0:	418fdf93          	srai	t6,t6,0x18
+482116c4:	01f2d363          	bge	t0,t6,482116ca <call_remote+0xbea>
+482116c8:	86f6                	mv	a3,t4
+482116ca:	5cdf0323          	sb	a3,1478(t5)
+482116ce:	0671                	addi	a2,a2,28
+482116d0:	0771                	addi	a4,a4,28
+482116d2:	059d                	addi	a1,a1,7
+482116d4:	d2c818e3          	bne	a6,a2,48211404 <call_remote+0x924>
+482116d8:	0c480813          	addi	a6,a6,196
+482116dc:	0c488893          	addi	a7,a7,196
+482116e0:	03130313          	addi	t1,t1,49
+482116e4:	d1c81de3          	bne	a6,t3,482113fe <call_remote+0x91e>
+482116e8:	48212537          	lui	a0,0x48212
+482116ec:	b9050513          	addi	a0,a0,-1136 # 48211b90 <call_remote+0x10b0>
+482116f0:	f7e05097          	auipc	ra,0xf7e05
+482116f4:	76c080e7          	jalr	1900(ra) # 40016e5c <printf>
+482116f8:	6919                	lui	s2,0x6
+482116fa:	6999                	lui	s3,0x6
+482116fc:	be098993          	addi	s3,s3,-1056 # 5be0 <temp.c.941c434b+0x4f67>
+48211700:	85ca                	mv	a1,s2
+48211702:	413c08b3          	sub	a7,s8,s3
+48211706:	c6090913          	addi	s2,s2,-928 # 5c60 <temp.c.941c434b+0x4fe7>
+4821170a:	99a6                	add	s3,s3,s1
+4821170c:	8e058593          	addi	a1,a1,-1824
+48211710:	409d8db3          	sub	s11,s11,s1
+48211714:	409888b3          	sub	a7,a7,s1
+48211718:	884e                	mv	a6,s3
+4821171a:	9926                	add	s2,s2,s1
+4821171c:	95a6                	add	a1,a1,s1
+4821171e:	756d                	lui	a0,0xffffb
+48211720:	07f00313          	li	t1,127
+48211724:	f8000e13          	li	t3,-128
+48211728:	87a2                	mv	a5,s0
+4821172a:	4681                	li	a3,0
+4821172c:	00fd8733          	add	a4,s11,a5
+48211730:	972a                	add	a4,a4,a0
+48211732:	00078603          	lb	a2,0(a5) # 4000 <temp.c.941c434b+0x3387>
+48211736:	a4070703          	lb	a4,-1472(a4)
+4821173a:	0785                	addi	a5,a5,1
+4821173c:	02c70733          	mul	a4,a4,a2
+48211740:	96ba                	add	a3,a3,a4
+48211742:	fef595e3          	bne	a1,a5,4821172c <call_remote+0xc4c>
+48211746:	010887b3          	add	a5,a7,a6
+4821174a:	00078783          	lb	a5,0(a5)
+4821174e:	07f00713          	li	a4,127
+48211752:	97b6                	add	a5,a5,a3
+48211754:	00f34763          	blt	t1,a5,48211762 <call_remote+0xc82>
+48211758:	3fc7c663          	blt	a5,t3,48211b44 <call_remote+0x1064>
+4821175c:	01879713          	slli	a4,a5,0x18
+48211760:	8761                	srai	a4,a4,0x18
+48211762:	00e80023          	sb	a4,0(a6)
+48211766:	0805                	addi	a6,a6,1
+48211768:	320d8d93          	addi	s11,s11,800
+4821176c:	fb281ee3          	bne	a6,s2,48211728 <call_remote+0xc48>
+48211770:	874e                	mv	a4,s3
+48211772:	00074783          	lbu	a5,0(a4)
+48211776:	01879693          	slli	a3,a5,0x18
+4821177a:	86e1                	srai	a3,a3,0x18
+4821177c:	0006d363          	bgez	a3,48211782 <call_remote+0xca2>
+48211780:	4781                	li	a5,0
+48211782:	00f70023          	sb	a5,0(a4)
+48211786:	0705                	addi	a4,a4,1
+48211788:	fee915e3          	bne	s2,a4,48211772 <call_remote+0xc92>
+4821178c:	48212537          	lui	a0,0x48212
+48211790:	ba050513          	addi	a0,a0,-1120 # 48211ba0 <call_remote+0x10c0>
+48211794:	f7e05097          	auipc	ra,0xf7e05
+48211798:	6c8080e7          	jalr	1736(ra) # 40016e5c <printf>
+4821179c:	77e9                	lui	a5,0xffffa
+4821179e:	3a078793          	addi	a5,a5,928 # ffffa3a0 <EFUSE+0xafecd3a0>
+482117a2:	00fb0333          	add	t1,s6,a5
+482117a6:	57b2                	lw	a5,44(sp)
+482117a8:	6899                	lui	a7,0x6
+482117aa:	c6a88893          	addi	a7,a7,-918 # 5c6a <temp.c.941c434b+0x4ff1>
+482117ae:	409785b3          	sub	a1,a5,s1
+482117b2:	40930333          	sub	t1,t1,s1
+482117b6:	98a6                	add	a7,a7,s1
+482117b8:	884a                	mv	a6,s2
+482117ba:	7569                	lui	a0,0xffffa
+482117bc:	07f00e13          	li	t3,127
+482117c0:	f8000e93          	li	t4,-128
+482117c4:	87ce                	mv	a5,s3
+482117c6:	4681                	li	a3,0
+482117c8:	00f58733          	add	a4,a1,a5
+482117cc:	972a                	add	a4,a4,a0
+482117ce:	00078603          	lb	a2,0(a5)
+482117d2:	42070703          	lb	a4,1056(a4)
+482117d6:	0785                	addi	a5,a5,1
+482117d8:	02c70733          	mul	a4,a4,a2
+482117dc:	96ba                	add	a3,a3,a4
+482117de:	fef915e3          	bne	s2,a5,482117c8 <call_remote+0xce8>
+482117e2:	010307b3          	add	a5,t1,a6
+482117e6:	00078783          	lb	a5,0(a5)
+482117ea:	07f00713          	li	a4,127
+482117ee:	97b6                	add	a5,a5,a3
+482117f0:	00fe4763          	blt	t3,a5,482117fe <call_remote+0xd1e>
+482117f4:	35d7c563          	blt	a5,t4,48211b3e <call_remote+0x105e>
+482117f8:	01879713          	slli	a4,a5,0x18
+482117fc:	8761                	srai	a4,a4,0x18
+482117fe:	00e80023          	sb	a4,0(a6)
+48211802:	0805                	addi	a6,a6,1
+48211804:	08058593          	addi	a1,a1,128
+48211808:	fb089ee3          	bne	a7,a6,482117c4 <call_remote+0xce4>
+4821180c:	6799                	lui	a5,0x6
+4821180e:	97a6                	add	a5,a5,s1
+48211810:	c6078683          	lb	a3,-928(a5) # 5c60 <temp.c.941c434b+0x4fe7>
+48211814:	c6178703          	lb	a4,-927(a5)
+48211818:	4405                	li	s0,1
+4821181a:	00e6c463          	blt	a3,a4,48211822 <call_remote+0xd42>
+4821181e:	8736                	mv	a4,a3
+48211820:	4401                	li	s0,0
+48211822:	6799                	lui	a5,0x6
+48211824:	97a6                	add	a5,a5,s1
+48211826:	c6278783          	lb	a5,-926(a5) # 5c62 <temp.c.941c434b+0x4fe9>
+4821182a:	30f74163          	blt	a4,a5,48211b2c <call_remote+0x104c>
+4821182e:	87ba                	mv	a5,a4
+48211830:	6719                	lui	a4,0x6
+48211832:	9726                	add	a4,a4,s1
+48211834:	c6370703          	lb	a4,-925(a4) # 5c63 <temp.c.941c434b+0x4fea>
+48211838:	2ee7c863          	blt	a5,a4,48211b28 <call_remote+0x1048>
+4821183c:	873e                	mv	a4,a5
+4821183e:	6799                	lui	a5,0x6
+48211840:	97a6                	add	a5,a5,s1
+48211842:	c6478783          	lb	a5,-924(a5) # 5c64 <temp.c.941c434b+0x4feb>
+48211846:	2cf74f63          	blt	a4,a5,48211b24 <call_remote+0x1044>
+4821184a:	87ba                	mv	a5,a4
+4821184c:	6719                	lui	a4,0x6
+4821184e:	9726                	add	a4,a4,s1
+48211850:	c6570703          	lb	a4,-923(a4) # 5c65 <temp.c.941c434b+0x4fec>
+48211854:	2ce7c663          	blt	a5,a4,48211b20 <call_remote+0x1040>
+48211858:	873e                	mv	a4,a5
+4821185a:	6799                	lui	a5,0x6
+4821185c:	97a6                	add	a5,a5,s1
+4821185e:	c6678783          	lb	a5,-922(a5) # 5c66 <temp.c.941c434b+0x4fed>
+48211862:	2af74d63          	blt	a4,a5,48211b1c <call_remote+0x103c>
+48211866:	87ba                	mv	a5,a4
+48211868:	6719                	lui	a4,0x6
+4821186a:	9726                	add	a4,a4,s1
+4821186c:	c6770703          	lb	a4,-921(a4) # 5c67 <temp.c.941c434b+0x4fee>
+48211870:	2ae7c463          	blt	a5,a4,48211b18 <call_remote+0x1038>
+48211874:	873e                	mv	a4,a5
+48211876:	6799                	lui	a5,0x6
+48211878:	97a6                	add	a5,a5,s1
+4821187a:	c6878783          	lb	a5,-920(a5) # 5c68 <temp.c.941c434b+0x4fef>
+4821187e:	28f74b63          	blt	a4,a5,48211b14 <call_remote+0x1034>
+48211882:	87ba                	mv	a5,a4
+48211884:	6719                	lui	a4,0x6
+48211886:	94ba                	add	s1,s1,a4
+48211888:	c6948603          	lb	a2,-919(s1)
+4821188c:	28c7c263          	blt	a5,a2,48211b10 <call_remote+0x1030>
+48211890:	863e                	mv	a2,a5
+48211892:	48212537          	lui	a0,0x48212
+48211896:	85a2                	mv	a1,s0
+48211898:	bb050513          	addi	a0,a0,-1104 # 48211bb0 <call_remote+0x10d0>
+4821189c:	f7e05097          	auipc	ra,0xf7e05
+482118a0:	5c0080e7          	jalr	1472(ra) # 40016e5c <printf>
+482118a4:	482127b7          	lui	a5,0x48212
+482118a8:	50f6                	lw	ra,124(sp)
+482118aa:	ca87a623          	sw	s0,-852(a5) # 48211cac <__binary_end+0xd4>
+482118ae:	5466                	lw	s0,120(sp)
+482118b0:	54d6                	lw	s1,116(sp)
+482118b2:	5946                	lw	s2,112(sp)
+482118b4:	59b6                	lw	s3,108(sp)
+482118b6:	5a26                	lw	s4,104(sp)
+482118b8:	5a96                	lw	s5,100(sp)
+482118ba:	5b06                	lw	s6,96(sp)
+482118bc:	4bf6                	lw	s7,92(sp)
+482118be:	4c66                	lw	s8,88(sp)
+482118c0:	4cd6                	lw	s9,84(sp)
+482118c2:	4d46                	lw	s10,80(sp)
+482118c4:	4db6                	lw	s11,76(sp)
+482118c6:	4501                	li	a0,0
+482118c8:	6109                	addi	sp,sp,128
+482118ca:	8082                	ret
+482118cc:	00538a03          	lb	s4,5(t2)
+482118d0:	00078b03          	lb	s6,0(a5)
+482118d4:	036a0a33          	mul	s4,s4,s6
+482118d8:	99d2                	add	s3,s3,s4
+482118da:	b4aff06f          	j	48210c24 <call_remote+0x144>
+482118de:	005c0603          	lb	a2,5(s8)
+482118e2:	01088583          	lb	a1,16(a7)
+482118e6:	02b60633          	mul	a2,a2,a1
+482118ea:	97b2                	add	a5,a5,a2
+482118ec:	bc25                	j	48211324 <call_remote+0x844>
+482118ee:	0ed31f63          	bne	t1,a3,482119ec <call_remote+0xf0c>
+482118f2:	4342                	lw	t1,16(sp)
+482118f4:	01770633          	add	a2,a4,s7
+482118f8:	073d                	addi	a4,a4,15 # 600f <temp.c.941c434b+0x5396>
+482118fa:	88e6                	mv	a7,s9
+482118fc:	00438c13          	addi	s8,t2,4
+48211900:	8cee                	mv	s9,s11
+48211902:	4581                	li	a1,0
+48211904:	87ba                	mv	a5,a4
+48211906:	01280b63          	beq	a6,s2,4821191c <call_remote+0xe3c>
+4821190a:	1ad80063          	beq	a6,a3,48211aaa <call_remote+0xfca>
+4821190e:	ffdc0703          	lb	a4,-3(s8)
+48211912:	ff260a83          	lb	s5,-14(a2)
+48211916:	03570733          	mul	a4,a4,s5
+4821191a:	95ba                	add	a1,a1,a4
+4821191c:	000c0703          	lb	a4,0(s8)
+48211920:	00060a83          	lb	s5,0(a2)
+48211924:	03570733          	mul	a4,a4,s5
+48211928:	95ba                	add	a1,a1,a4
+4821192a:	00d50963          	beq	a0,a3,4821193c <call_remote+0xe5c>
+4821192e:	003c0703          	lb	a4,3(s8)
+48211932:	00e60a83          	lb	s5,14(a2)
+48211936:	03570733          	mul	a4,a4,s5
+4821193a:	95ba                	add	a1,a1,a4
+4821193c:	0c460613          	addi	a2,a2,196
+48211940:	0c25                	addi	s8,s8,9
+48211942:	fcc792e3          	bne	a5,a2,48211906 <call_remote+0xe26>
+48211946:	00098703          	lb	a4,0(s3)
+4821194a:	016f0633          	add	a2,t5,s6
+4821194e:	972e                	add	a4,a4,a1
+48211950:	16e2c963          	blt	t0,a4,48211ac2 <call_remote+0xfe2>
+48211954:	1a874b63          	blt	a4,s0,48211b0a <call_remote+0x102a>
+48211958:	00e60023          	sb	a4,0(a2)
+4821195c:	0f85                	addi	t6,t6,1
+4821195e:	0f39                	addi	t5,t5,14
+48211960:	0805                	addi	a6,a6,1
+48211962:	0339                	addi	t1,t1,14
+48211964:	92d51ee3          	bne	a0,a3,482112a0 <call_remote+0x7c0>
+48211968:	8626                	mv	a2,s1
+4821196a:	09038393          	addi	t2,t2,144
+4821196e:	84e6                	mv	s1,s9
+48211970:	0985                	addi	s3,s3,1
+48211972:	0c460613          	addi	a2,a2,196
+48211976:	91d39be3          	bne	t2,t4,4821128c <call_remote+0x7ac>
+4821197a:	b481                	j	482113ba <call_remote+0x8da>
+4821197c:	13550563          	beq	a0,s5,48211aa6 <call_remote+0xfc6>
+48211980:	17050963          	beq	a0,a6,48211af2 <call_remote+0x1012>
+48211984:	49b2                	lw	s3,12(sp)
+48211986:	ffec8a03          	lb	s4,-2(s9)
+4821198a:	00090b03          	lb	s6,0(s2)
+4821198e:	00098c03          	lb	s8,0(s3)
+48211992:	00238983          	lb	s3,2(t2)
+48211996:	038a0a33          	mul	s4,s4,s8
+4821199a:	036989b3          	mul	s3,s3,s6
+4821199e:	9a4e                	add	s4,s4,s3
+482119a0:	00438983          	lb	s3,4(t2)
+482119a4:	00058d03          	lb	s10,0(a1)
+482119a8:	00538b03          	lb	s6,5(t2)
+482119ac:	00078c03          	lb	s8,0(a5)
+482119b0:	03a989b3          	mul	s3,s3,s10
+482119b4:	038b0b33          	mul	s6,s6,s8
+482119b8:	99d2                	add	s3,s3,s4
+482119ba:	99da                	add	s3,s3,s6
+482119bc:	ab0f0263          	beq	t5,a6,48210c60 <call_remote+0x180>
+482119c0:	4a52                	lw	s4,20(sp)
+482119c2:	4c22                	lw	s8,8(sp)
+482119c4:	00048d03          	lb	s10,0(s1)
+482119c8:	000a0a03          	lb	s4,0(s4)
+482119cc:	00838b03          	lb	s6,8(t2)
+482119d0:	000c0c03          	lb	s8,0(s8)
+482119d4:	03aa0a33          	mul	s4,s4,s10
+482119d8:	038b0b33          	mul	s6,s6,s8
+482119dc:	9a4e                	add	s4,s4,s3
+482119de:	014b09b3          	add	s3,s6,s4
+482119e2:	a7eff06f          	j	48210c60 <call_remote+0x180>
+482119e6:	4b01                	li	s6,0
+482119e8:	a1aff06f          	j	48210c02 <call_remote+0x122>
+482119ec:	00170793          	addi	a5,a4,1
+482119f0:	c43e                	sw	a5,8(sp)
+482119f2:	01a705b3          	add	a1,a4,s10
+482119f6:	00138893          	addi	a7,t2,1
+482119fa:	4781                	li	a5,0
+482119fc:	03280363          	beq	a6,s2,48211a22 <call_remote+0xf42>
+48211a00:	0cd80463          	beq	a6,a3,48211ac8 <call_remote+0xfe8>
+48211a04:	00088c03          	lb	s8,0(a7)
+48211a08:	00058703          	lb	a4,0(a1)
+48211a0c:	00188603          	lb	a2,1(a7)
+48211a10:	00158a83          	lb	s5,1(a1)
+48211a14:	02ec0733          	mul	a4,s8,a4
+48211a18:	03560633          	mul	a2,a2,s5
+48211a1c:	973e                	add	a4,a4,a5
+48211a1e:	00e607b3          	add	a5,a2,a4
+48211a22:	00388c03          	lb	s8,3(a7)
+48211a26:	00e58703          	lb	a4,14(a1)
+48211a2a:	00488603          	lb	a2,4(a7)
+48211a2e:	00f58a83          	lb	s5,15(a1)
+48211a32:	02ec0733          	mul	a4,s8,a4
+48211a36:	03560633          	mul	a2,a2,s5
+48211a3a:	973e                	add	a4,a4,a5
+48211a3c:	00e607b3          	add	a5,a2,a4
+48211a40:	02d50063          	beq	a0,a3,48211a60 <call_remote+0xf80>
+48211a44:	00688a83          	lb	s5,6(a7)
+48211a48:	01c58703          	lb	a4,28(a1)
+48211a4c:	00788c03          	lb	s8,7(a7)
+48211a50:	01d58603          	lb	a2,29(a1)
+48211a54:	02ea8733          	mul	a4,s5,a4
+48211a58:	02cc0c33          	mul	s8,s8,a2
+48211a5c:	97ba                	add	a5,a5,a4
+48211a5e:	97e2                	add	a5,a5,s8
+48211a60:	4722                	lw	a4,8(sp)
+48211a62:	0c458593          	addi	a1,a1,196
+48211a66:	08a5                	addi	a7,a7,9
+48211a68:	f8e59ae3          	bne	a1,a4,482119fc <call_remote+0xf1c>
+48211a6c:	00098703          	lb	a4,0(s3)
+48211a70:	014f05b3          	add	a1,t5,s4
+48211a74:	959a                	add	a1,a1,t1
+48211a76:	973e                	add	a4,a4,a5
+48211a78:	06e2c663          	blt	t0,a4,48211ae4 <call_remote+0x1004>
+48211a7c:	0a874a63          	blt	a4,s0,48211b30 <call_remote+0x1050>
+48211a80:	00e58023          	sb	a4,0(a1)
+48211a84:	0305                	addi	t1,t1,1
+48211a86:	4722                	lw	a4,8(sp)
+48211a88:	4a81                	li	s5,0
+48211a8a:	b03d                	j	482112b8 <call_remote+0x7d8>
+48211a8c:	4ca2                	lw	s9,8(sp)
+48211a8e:	4db2                	lw	s11,12(sp)
+48211a90:	0c488893          	addi	a7,a7,196
+48211a94:	ff171ee3          	bne	a4,a7,48211a90 <call_remote+0xfb0>
+48211a98:	b0f9                	j	48211366 <call_remote+0x886>
+48211a9a:	000b8a03          	lb	s4,0(s7)
+48211a9e:	00c70b33          	add	s6,a4,a2
+48211aa2:	9d8ff06f          	j	48210c7a <call_remote+0x19a>
+48211aa6:	4a01                	li	s4,0
+48211aa8:	bde5                	j	482119a0 <call_remote+0xec0>
+48211aaa:	873e                	mv	a4,a5
+48211aac:	0c460613          	addi	a2,a2,196
+48211ab0:	fee61ee3          	bne	a2,a4,48211aac <call_remote+0xfcc>
+48211ab4:	00098703          	lb	a4,0(s3)
+48211ab8:	016f0633          	add	a2,t5,s6
+48211abc:	972e                	add	a4,a4,a1
+48211abe:	e8e2dbe3          	bge	t0,a4,48211954 <call_remote+0xe74>
+48211ac2:	00560023          	sb	t0,0(a2)
+48211ac6:	bd59                	j	4821195c <call_remote+0xe7c>
+48211ac8:	4722                	lw	a4,8(sp)
+48211aca:	0c458593          	addi	a1,a1,196
+48211ace:	feb71ee3          	bne	a4,a1,48211aca <call_remote+0xfea>
+48211ad2:	c43a                	sw	a4,8(sp)
+48211ad4:	00098703          	lb	a4,0(s3)
+48211ad8:	014f05b3          	add	a1,t5,s4
+48211adc:	959a                	add	a1,a1,t1
+48211ade:	973e                	add	a4,a4,a5
+48211ae0:	f8e2dee3          	bge	t0,a4,48211a7c <call_remote+0xf9c>
+48211ae4:	4722                	lw	a4,8(sp)
+48211ae6:	00558023          	sb	t0,0(a1)
+48211aea:	0305                	addi	t1,t1,1
+48211aec:	4a81                	li	s5,0
+48211aee:	fcaff06f          	j	482112b8 <call_remote+0x7d8>
+48211af2:	000b8a03          	lb	s4,0(s7)
+48211af6:	8b76                	mv	s6,t4
+48211af8:	982ff06f          	j	48210c7a <call_remote+0x19a>
+48211afc:	f8000c13          	li	s8,-128
+48211b00:	982ff06f          	j	48210c82 <call_remote+0x1a2>
+48211b04:	f8000893          	li	a7,-128
+48211b08:	b8bd                	j	48211386 <call_remote+0x8a6>
+48211b0a:	00860023          	sb	s0,0(a2)
+48211b0e:	b5b9                	j	4821195c <call_remote+0xe7c>
+48211b10:	4425                	li	s0,9
+48211b12:	b341                	j	48211892 <call_remote+0xdb2>
+48211b14:	4421                	li	s0,8
+48211b16:	b3bd                	j	48211884 <call_remote+0xda4>
+48211b18:	441d                	li	s0,7
+48211b1a:	bbb1                	j	48211876 <call_remote+0xd96>
+48211b1c:	4419                	li	s0,6
+48211b1e:	b3a9                	j	48211868 <call_remote+0xd88>
+48211b20:	4415                	li	s0,5
+48211b22:	bb25                	j	4821185a <call_remote+0xd7a>
+48211b24:	4411                	li	s0,4
+48211b26:	b31d                	j	4821184c <call_remote+0xd6c>
+48211b28:	440d                	li	s0,3
+48211b2a:	bb11                	j	4821183e <call_remote+0xd5e>
+48211b2c:	4409                	li	s0,2
+48211b2e:	b309                	j	48211830 <call_remote+0xd50>
+48211b30:	4722                	lw	a4,8(sp)
+48211b32:	00858023          	sb	s0,0(a1)
+48211b36:	0305                	addi	t1,t1,1
+48211b38:	4a81                	li	s5,0
+48211b3a:	f7eff06f          	j	482112b8 <call_remote+0x7d8>
+48211b3e:	f8000713          	li	a4,-128
+48211b42:	b975                	j	482117fe <call_remote+0xd1e>
+48211b44:	f8000713          	li	a4,-128
+48211b48:	b929                	j	48211762 <call_remote+0xc82>
