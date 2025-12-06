@@ -70,43 +70,9 @@ This enables rapid prototyping, algorithm development, and deployment of computa
 
 The P4-JIT system follows a client-server architecture split between the Host (development PC) and the Device (ESP32-P4 microcontroller).
 
-![System Architecture](assets/system-architecture.png)
+![System Architecture](assets/system-architecture.jpeg)
 
-**Image Prompt for `assets/system-architecture.png`**:
-```
-Generate a professional system architecture diagram showing the P4-JIT system components. 
 
-LEFT SIDE - Host PC (Blue Theme):
-- Top: "Python Client" box containing "p4jit package"
-- Middle: "Toolchain" box with sub-components:
-  - Builder
-  - Compiler (GCC)
-  - Wrapper Generator
-  - Linker Generator
-- Bottom: "USB Driver" box
-
-RIGHT SIDE - ESP32-P4 Device (Green Theme):
-- Top: "USB Transport" box with "TinyUSB CDC-ACM"
-- Middle: "Protocol Layer" box with:
-  - Protocol Parser
-  - Command Dispatcher
-- Bottom: Two parallel boxes:
-  - "Memory Manager" (heap_caps_*)
-  - "Code Executor" (JIT Functions)
-
-CENTER: Large bidirectional arrow labeled "USB High-Speed (12 Mbps)" connecting Host and Device
-
-Add annotations:
-- Host side: "Source Code (C/C++)" input arrow
-- Device side: "Native RISC-V Execution" output
-- Data flow arrows showing: Build → Link → Upload → Execute
-
-Reference code structure:
-- Host: host/p4jit/ directory
-- Device: components/p4_jit/ directory
-
-Use clear labels, professional color coding, and technical diagram style.
-```
 
 **High-Level Data Flow**:
 1. **Source Code** → Host Toolchain → **Binary Object**
@@ -237,36 +203,8 @@ The Builder is the central orchestrator of the build process. It manages the ent
 
 **Build Pipeline**:
 
-![Builder Pipeline](assets/builder-pipeline.png)
+![Builder Pipeline](assets/builder-pipeline.jpeg)
 
-**Image Prompt for `assets/builder-pipeline.png`**:
-```
-Generate a detailed flowchart showing the Builder pipeline from host/p4jit/toolchain/builder.py.
-
-TOP TO BOTTOM FLOW:
-1. START: "Entry Source File" (rounded rectangle)
-2. PROCESS: "Load Configuration" (rectangle) - "toolchain.yaml"
-3. PROCESS: "Discover Source Files" (rectangle) - "File Discovery Algorithm"
-4. DECISION: "Multiple Files?" (diamond)
-   - YES → "Compile Each File" (rectangle, loop back)
-   - NO → Continue
-5. PROCESS: "Generate Object Files" (rectangle) - ".o files"
-6. PROCESS: "Generate Linker Script" (rectangle) - "LinkerGenerator"
-7. PROCESS: "Link Object Files" (rectangle) - "GCC Linker"
-8. PROCESS: "Extract Binary" (rectangle) - "objcopy"
-9. PROCESS: "Process Sections" (rectangle) - "BinaryProcessor"
-10. PROCESS: "Extract Symbols" (rectangle) - "SymbolExtractor"
-11. PROCESS: "Validate Output" (rectangle) - "Validator"
-12. END: "BinaryObject" (rounded rectangle)
-
-Add side annotations:
-- File Discovery: "Glob *.c, *.cpp, *.S"
-- Linking: "Position-specific addresses"
-- Validation: "Check size, alignment, entry point"
-
-Use standard flowchart symbols with professional styling.
-Reference: builder.py:build() method
-```
 
 **Multi-File Discovery Algorithm**:
 
@@ -684,44 +622,8 @@ Python cannot directly set RISC-V CPU registers (a0-a7, fa0-fa7). The wrapper pr
 
 **Memory Layout**:
 
-![Wrapper Memory Layout](assets/wrapper-memory-layout.png)
+![Wrapper Memory Layout](assets/wrapper-memory-layout.jpeg)
 
-**Image Prompt for `assets/wrapper-memory-layout.png`**:
-```
-Create a detailed technical diagram of the wrapper args buffer memory structure.
-
-MAIN SECTION - Args Buffer:
-- Title: "Args Buffer (128 bytes)"
-- Show vertical bar representing memory from offset 0x00 to 0x7C
-- Divide into 32 horizontal slots, each 4 bytes
-- Label left side with byte offsets: 0x00, 0x04, 0x08, ..., 0x7C
-- Label right side with slot indices: [0], [1], [2], ..., [31]
-
-SLOT ANNOTATIONS:
-- Slots [0-30]: Green background, label "Argument Slots"
-- Slot [31] (0x7C): Red background, label "Return Value Slot"
-
-EXAMPLE DATA (inset box):
-Show 3 arguments being passed:
-- Slot [0] = 0x30100000 (pointer, 32-bit address)
-- Slot [1] = 0xFFFFFFD6 (int32, -42 in two's complement)
-- Slot [2] = 0x40490FDB (float32, 3.14159... in IEEE 754)
-- Slot [31] = 0x00000042 (return: int32, 66)
-
-ANNOTATIONS:
-- Add arrow: "Base Address (arg_address)" pointing to offset 0x00
-- Add note: "4-byte alignment, Little-endian"
-- Add formula: "slot_offset = index × 4"
-- Add note: "All types packed to 32-bit slots"
-
-LEGEND:
-- Green: "Read by wrapper (input)"
-- Red: "Written by wrapper (output)"
-- Gray: "Unused (if < 31 args)"
-
-Reference: wrapper_generator.py:_generate_arg_reads() and _generate_result_write()
-Use professional technical diagram style with clear grid lines.
-```
 
 **Wrapper Code Structure**:
 
@@ -1409,46 +1311,9 @@ typedef struct {
 
 The protocol handler implements the packet-based binary protocol over USB.
 
-![Protocol State Machine](assets/protocol-state-machine.png)
+![Protocol State Machine](assets/protocol-state-machine.jpeg)
 
-**Image Prompt for `assets/protocol-state-machine.png`**:
-```
-Generate a state machine diagram for the protocol handler from components/p4_jit/src/protocol.c:protocol_loop().
 
-STATES (rounded rectangles):
-1. "Wait for Magic[0]" (start state, double border)
-2. "Wait for Magic[1]"
-3. "Read Header" (6 bytes)
-4. "Read Payload" (N bytes)
-5. "Read Checksum" (2 bytes)
-6. "Verify Checksum" (decision diamond)
-7. "Dispatch Command" (rectangle)
-8. "Send Response" (rectangle)
-
-TRANSITIONS:
-- "Wait for Magic[0]" → "Wait for Magic[1]" (condition: "byte == 0xA5")
-- "Wait for Magic[0]" ← loop (condition: "byte != 0xA5")
-- "Wait for Magic[1]" → "Read Header" (condition: "byte == 0x5A")
-- "Wait for Magic[1]" → "Wait for Magic[0]" (condition: "byte != 0x5A")
-- "Read Header" → "Read Payload" (condition: "len > 0")
-- "Read Header" → "Read Checksum" (condition: "len == 0")
-- "Read Payload" → "Read Checksum"
-- "Read Checksum" → "Verify Checksum"
-- "Verify Checksum" → "Dispatch Command" (condition: "OK")
-- "Verify Checksum" → "Send Error Response" → "Wait for Magic[0]" (condition: "FAIL")
-- "Dispatch Command" → "Send Response"
-- "Send Response" → "Wait for Magic[0]" (loop back)
-
-ERROR PATHS (red dashed lines):
-- From any state: "Timeout" → "Wait for Magic[0]"
-
-Add annotations:
-- "USB Read (Blocking)"
-- "Calculate Checksum"
-- "ERR_CHECKSUM on mismatch"
-
-Use standard FSM notation with clear labels and colors.
-```
 
 **Protocol Loop Implementation**:
 
@@ -1788,46 +1653,8 @@ static uint32_t handle_heap_info(uint8_t *payload, uint32_t len,
 
 The USB transport layer uses TinyUSB and FreeRTOS StreamBuffers to provide reliable, high-speed communication.
 
-![USB Data Flow](assets/usb-data-flow.png)
+![USB Data Flow](assets/usb-data-flow.jpeg)
 
-**Image Prompt for `assets/usb-data-flow.png`**:
-```
-Create a data flow diagram showing USB communication architecture from components/p4_jit/src/usb_transport.c.
-
-COMPONENTS (boxes, top to bottom):
-1. "USB Host (PC)" - top, gray box
-2. "ESP32-P4 USB PHY" - hardware layer
-3. "TinyUSB Driver" - yellow box, contains "CDC-ACM Interface"
-4. "RX Callback (ISR Context)" - orange box, high priority
-5. "StreamBuffer (FIFO)" - blue cylinder, "16 KB"
-6. "Protocol Task (Task Context)" - green box, normal priority
-7. "Command Dispatcher" - purple box
-
-DATA FLOW:
-RECEIVE PATH (left side, downward arrows):
-- USB Host → USB PHY: "USB Packets"
-- USB PHY → TinyUSB: "Interrupt"
-- TinyUSB → RX Callback: "tinyusb_cdcacm_read()"
-- RX Callback → StreamBuffer: "xStreamBufferSend()"
-- StreamBuffer → Protocol Task: "xStreamBufferReceive()"
-- Protocol Task → Command Dispatcher: "Parsed Packets"
-
-TRANSMIT PATH (right side, upward arrows):
-- Command Dispatcher → Protocol Task: "Response Data"
-- Protocol Task → TinyUSB: "tinyusb_cdcacm_write_queue()"
-- TinyUSB → USB PHY: "USB Packets"
-- USB PHY → USB Host: "Response"
-
-ANNOTATIONS:
-- RX Callback: "High Priority ISR"
-- StreamBuffer: "Decouples ISR from Task"
-- Protocol Task: "Blocking Read/Write"
-- Add note: "DMA Transfer" on USB PHY
-- Add note: "No data loss" on StreamBuffer
-
-Use professional technical diagram style with clear data flow arrows.
-Reference: usb_transport_init(), rx_callback(), usb_read_bytes(), usb_write_bytes()
-```
 
 **Initialization**:
 
@@ -2395,54 +2222,8 @@ class RemoteFunction:
 
 Smart Args handles automatic type conversion and memory management.
 
-![Smart Args Flow](assets/smart-args-flow.png)
+![Smart Args Flow](assets/smart-args-flow.jpeg)
 
-**Image Prompt for `assets/smart-args-flow.png`**:
-```
-Generate a sequence diagram showing Smart Args execution flow from host/p4jit/runtime/smart_args.py.
-
-ACTORS (left to right):
-1. "User Code" (stick figure)
-2. "SmartArgs Handler" (box)
-3. "DeviceManager" (box)
-4. "ESP32-P4 Device" (box)
-
-SEQUENCE OF EVENTS (top to bottom with arrows):
-
-1. User Code → SmartArgs: "func(array, scalar)"
-2. SmartArgs → SmartArgs: "Validate types against signature"
-3. SmartArgs → SmartArgs: "For each array: allocate device memory"
-4. SmartArgs → DeviceManager: "allocate(size, caps, align)"
-5. DeviceManager → ESP32-P4: "CMD_ALLOC"
-6. ESP32-P4 → DeviceManager: "address"
-7. DeviceManager → SmartArgs: "address"
-8. SmartArgs → SmartArgs: "Pack args to binary (struct.pack)"
-9. SmartArgs → DeviceManager: "write_memory(args_addr, blob)"
-10. DeviceManager → ESP32-P4: "CMD_WRITE_MEM"
-11. SmartArgs → DeviceManager: "execute(code_addr)"
-12. DeviceManager → ESP32-P4: "CMD_EXEC"
-13. ESP32-P4: Internal box "Function executes, modifies arrays"
-14. ESP32-P4 → DeviceManager: "return value (in args buffer)"
-15. SmartArgs → SmartArgs: "Read return value from slot 31"
-16. SmartArgs → SmartArgs: "If sync_enabled: read modified arrays"
-17. SmartArgs → DeviceManager: "read_memory(array_addr, size)" [in loop]
-18. DeviceManager → ESP32-P4: "CMD_READ_MEM" [in loop]
-19. ESP32-P4 → DeviceManager: "array data" [in loop]
-20. SmartArgs → SmartArgs: "np.copyto(original_array, new_data)"
-21. SmartArgs → DeviceManager: "free(array_addr)" [for each array]
-22. DeviceManager → ESP32-P4: "CMD_FREE" [for each]
-23. SmartArgs → User Code: "return result"
-
-Add annotations:
-- "Type validation" at step 2
-- "Automatic allocation" at steps 4-7
-- "Binary packing" at step 8
-- "Bidirectional sync" at steps 16-20
-- "Cleanup" at steps 21-22
-
-Use standard UML sequence diagram notation with lifelines and activation boxes.
-Reference: smart_args.py:pack(), sync_back(), get_return_value(), cleanup()
-```
 
 **Complete Implementation**:
 
@@ -2696,57 +2477,7 @@ int compute(int a) { return a * a; }
 
 The two-pass system is fundamental to how P4-JIT works.
 
-![Two-Pass Linking](assets/two-pass-linking.png)
-
-**Image Prompt for `assets/two-pass-linking.png`**:
-```
-Create a flowchart illustrating the two-pass linking process.
-
-SPLIT INTO TWO PARALLEL SECTIONS:
-
-LEFT SECTION - Pass 1 (Probe):
-1. START: "Entry Source File (main.c)" [rounded rectangle]
-2. PROCESS: "Compile with Dummy Address" [rectangle]
-   - Annotation: "Base = 0x03000004"
-   - Annotation: "Args = 0x00030004"
-3. PROCESS: "Link with Dummy Linker Script" [rectangle]
-4. PROCESS: "Extract Binary" [rectangle]
-5. PROCESS: "Measure Size" [rectangle]
-   - Show output: "Code Size = 2048 bytes"
-   - Show output: "Args Size = 128 bytes"
-6. END: "Size Information" [rounded rectangle, blue]
-
-RIGHT SECTION - Pass 2 (Final):
-1. START: "Size Information" [rounded rectangle, blue] (arrow from Pass 1)
-2. PROCESS: "Allocate Device Memory" [rectangle]
-   - Show: "CMD_ALLOC(2048 + 64) → 0x40800000"
-   - Show: "CMD_ALLOC(128) → 0x48200000"
-3. PROCESS: "Re-compile Same Source" [rectangle]
-   - Annotation: "Base = 0x40800000 (real)"
-   - Annotation: "Args = 0x48200000 (real)"
-4. PROCESS: "Link with Real Addresses" [rectangle]
-5. PROCESS: "Extract Binary" [rectangle]
-6. PROCESS: "Upload to Device" [rectangle]
-   - Show: "CMD_WRITE_MEM(0x40800000, binary)"
-7. END: "Ready to Execute" [rounded rectangle, green]
-
-CONNECTING ARROW:
-- Large arrow from Pass 1 "Size Information" to Pass 2 START
-- Label: "Memory Requirements"
-
-COLOR CODING:
-- Pass 1 boxes: Light orange (probe/temporary)
-- Pass 2 boxes: Light green (final/permanent)
-- Data transfer: Blue arrows
-
-ANNOTATIONS:
-- Pass 1: "Addresses INVALID for execution"
-- Pass 2: "Addresses VALID, code executable"
-- Between passes: "Same source code, different addresses"
-
-Reference: builder.py:build() and p4jit.py:load()
-Use professional flowchart style with clear visual separation.
-```
+![Two-Pass Linking](assets/two-pass-linking.jpeg)
 
 #### 3.2.1 Why Two Passes?
 
@@ -3083,67 +2814,7 @@ esp_err_t call_remote(void) {
 
 ### 5.1 ESP32-P4 Memory Regions
 
-![ESP32-P4 Memory Map](assets/esp32p4-memory-map.png)
-
-**Image Prompt for `assets/esp32p4-memory-map.png`**:
-```
-Generate a memory map diagram for ESP32-P4 showing physical address ranges.
-
-VERTICAL BAR LAYOUT (Address space 0x00000000 to 0xFFFFFFFF):
-
-REGIONS FROM TOP TO BOTTOM:
-1. "ROM" 
-   - Address: 0x40000000 - 0x40100000
-   - Size: 1 MB
-   - Color: Light gray
-   - Label: "Boot ROM"
-
-2. "IRAM"
-   - Address: 0x40800000 - 0x40880000
-   - Size: 512 KB
-   - Color: Green
-   - Label: "Instruction RAM (Executable)"
-
-3. "DRAM"
-   - Address: 0x3FC00000 - 0x3FD00000
-   - Size: 1 MB
-   - Color: Blue
-   - Label: "Data RAM"
-
-4. "L2MEM/SRAM"
-   - Address: 0x4FF00000 - 0x4FFBFFFF
-   - Size: 768 KB
-   - Color: Yellow
-   - Label: "Internal SRAM\n(Requires PMP_IDRAM_SPLIT=n)"
-
-5. "PSRAM"
-   - Address: 0x30100000 - 0x32100000
-   - Size: 32 MB
-   - Color: Purple
-   - Label: "External PSRAM\n(Cached, Execute-In-Place)"
-
-6. "Memory-Mapped Peripherals"
-   - Address: 0x50000000 - 0x60000000
-   - Color: Orange
-   - Label: "I/O, GPIO, SPI, I2C, etc."
-
-ANNOTATIONS:
-- Add arrow to PSRAM: "Typical JIT Code Location"
-- Add arrow to L2MEM: "Optional: Low-latency code"
-- Add legend:
-  - Green: "Executable"
-  - Blue: "Data Only"
-  - Yellow: "Configurable (RWX)"
-  - Purple: "Cached External"
-
-Add performance notes:
-- IRAM: "Fast, Direct"
-- DRAM: "Fast, Direct"
-- L2MEM: "Fast, Direct (if enabled)"
-- PSRAM: "Slower, but cached"
-
-Use professional technical diagram style with clear address labels.
-```
+![ESP32-P4 Memory Map](assets/esp32p4-memory-map.jpeg)
 
 ### 5.2 Memory Capabilities
 
@@ -3214,69 +2885,8 @@ def write_memory(self, address, data):
 
 ### 5.4 Memory Allocation Lifecycle
 
-![Memory Allocation Lifecycle](assets/memory-allocation-lifecycle.png)
+![Memory Allocation Lifecycle](assets/memory-allocation-lifecycle.jpeg)
 
-**Image Prompt for `assets/memory-allocation-lifecycle.png`**:
-```
-Create a timeline diagram showing memory allocation lifecycle during JIT function loading.
-
-HORIZONTAL TIMELINE (left to right):
-
-TIME EVENTS:
-1. "Pass 1: Probe Build"
-   - Show: "No allocation"
-   - Annotation: "Measure size only"
-
-2. "Allocate Code Region"
-   - Show: Rectangle in PSRAM area
-   - Label: "0x40800000, 2112 bytes"
-   - Color: Green (allocated)
-
-3. "Allocate Args Region"
-   - Show: Rectangle in PSRAM area
-   - Label: "0x48200000, 128 bytes"
-   - Color: Blue (allocated)
-
-4. "Pass 2: Recompile"
-   - Show: Same rectangles
-   - Annotation: "Addresses locked in"
-
-5. "Upload Code"
-   - Show: Code rectangle filled with pattern
-   - Annotation: "CMD_WRITE_MEM"
-
-6. "Execute Function"
-   - Show: Highlight code rectangle
-   - Annotation: "Running"
-
-7. "Smart Args: Allocate Arrays" (if applicable)
-   - Show: Small temporary rectangles
-   - Label: "Array data"
-   - Color: Yellow (temporary)
-
-8. "Free Arrays"
-   - Show: Yellow rectangles disappear
-   - Annotation: "CMD_FREE (automatic)"
-
-9. "Function Complete"
-   - Show: Green and Blue rectangles remain
-   - Annotation: "Code still loaded"
-
-10. "func.free() Called"
-    - Show: All rectangles disappear
-    - Annotation: "All memory released"
-
-VERTICAL AXIS:
-Show memory regions: PSRAM, with address markers
-
-ANNOTATIONS:
-- "Persistent Allocation" for code/args
-- "Temporary Allocation" for arrays
-- "Automatic Cleanup" for array deallocation
-
-Use timeline style with boxes appearing/disappearing to show allocation/free.
-Reference: p4jit.py:load() and smart_args.py:pack()/cleanup()
-```
 
 ---
 
@@ -3893,22 +3503,6 @@ MALLOC_CAP_TCM              = (1<<16)
 
 ---
 
-## 16. Image Generation Summary
-
-All images to generate:
-
-1. `assets/system-architecture.png` - System overview
-2. `assets/builder-pipeline.png` - Build process
-3. `assets/wrapper-memory-layout.png` - Args buffer structure
-4. `assets/protocol-state-machine.png` - Protocol FSM
-5. `assets/usb-data-flow.png` - USB communication
-6. `assets/smart-args-flow.png` - Smart Args sequence
-7. `assets/two-pass-linking.png` - Two-pass build
-8. `assets/esp32p4-memory-map.png` - Memory regions
-9. `assets/memory-allocation-lifecycle.png` - Allocation timeline
-10. `assets/args-buffer-detailed.png` - Detailed buffer layout
-
----
 
 **Document Version**: 2.0.0  
 **Last Updated**: January 2025  
