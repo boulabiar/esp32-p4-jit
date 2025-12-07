@@ -6,6 +6,69 @@
 
 P4-JIT is a sophisticated dynamic code loading system that enables you to write, compile, and execute native RISC-V machine code on the ESP32-P4 microcontroller in seconds, not minutes. Perfect for rapid algorithm development, DSP prototyping, and machine learning kernel optimization.
 
+
+---
+
+## 🚀 Start Here: Interactive Tutorials
+
+**New to P4-JIT? Start with these Jupyter notebooks to see the full power of the system:**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📘 [Tutorial 1: Introduction](notebooks/tutorials/t01_introduction/t01_introduction.ipynb)
+
+**Complete ESP32-P4 JIT Workflow**
+
+Learn the fundamentals through a practical audio DSP example:
+
+- ✅ Mix C + RISC-V Assembly
+- ✅ Call firmware functions (printf, malloc)
+- ✅ Cycle-accurate performance measurement
+- ✅ NumPy ↔ Device seamless data transfer
+- ✅ Binary introspection & disassembly
+
+**🎯 Example:** Vector scaling kernel processing 48,000 audio samples
+
+**⏱️ Time:** ~15 minutes
+
+</td>
+<td width="50%" valign="top">
+
+### 📗 [Tutorial 2: MNIST Classification](notebooks/tutorials/t02_mnist_classification/mnist_p4jit_fixed.ipynb)
+
+**Production INT8 Neural Network**
+
+Deploy a quantized CNN using ESP32-P4 custom SIMD:
+
+- ✅ **ESP32-P4 PIE instructions** (cannot simulate!)
+- ✅ INT8 quantization pipeline
+- ✅ QAT training (98.79% accuracy)
+- ✅ Hardware SIMD (16x parallel MAC)
+- ✅ Real-time inference (25ms/image)
+
+**🎯 Example:** Handwritten digit recognition at 40 fps
+
+**⏱️ Time:** ~30 minutes
+
+</td>
+</tr>
+</table>
+
+### 💡 Why These Tutorials Matter
+
+| Traditional Embedded ML | P4-JIT Approach |
+|------------------------|-----------------|
+| ❌ Firmware changes required | ✅ No firmware modification |
+| ❌ 30-60s compile-flash-test cycle | ✅ 2-3s deploy cycle |
+| ❌ Cannot use custom ISA in simulators | ✅ **Test ESP32-P4 PIE on real hardware** |
+| ❌ Complex build systems | ✅ Simple Python + NumPy interface |
+
+**The Key Insight:** Tutorial 2 demonstrates code with **ESP32-P4 PIE SIMD instructions** that **cannot be tested in RISC-V simulators** (QEMU, Spike, etc.). P4-JIT enables rapid iteration with hardware-specific ISA extensions directly on real silicon.
+
+---
+
 ---
 
 ## 🎯 The Power of Python + Native Performance
@@ -14,31 +77,7 @@ P4-JIT is a sophisticated dynamic code loading system that enables you to write,
 
 ### The Complete Workflow:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Python Ecosystem (Host PC)                                     │
-│  ├─ Generate test data (NumPy, Pandas, SciPy)                   │
-│  ├─ Prepare inputs (image processing, signal generation)        │
-│  └─ Load data into NumPy arrays                                 │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │ Automatic transfer (USB High-Speed)
-                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  ESP32-P4 (Native RISC-V)                                       │
-│  ├─ Execute compute-intensive kernels at 360 MHz                │
-│  ├─ Process data with zero interpreter overhead                 │
-│  └─ Modify arrays in-place (optional sync-back)                 │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │ Automatic return (results in NumPy arrays)
-                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Python Ecosystem (Host PC)                                     │
-│  ├─ Visualize results (Matplotlib, Plotly, Seaborn)             │
-│  ├─ Analyze performance (timeit, profiling)                     │
-│  ├─ Compare algorithms (A/B testing)                            │
-│  └─ Export data (CSV, HDF5, JSON)                               │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Workflow](assets/workflow.jpeg)
 
 ---
 
