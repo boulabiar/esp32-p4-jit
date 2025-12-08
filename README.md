@@ -1,6 +1,14 @@
-# ESP32-P4 JIT: Dynamic Code Loading for ESP32-P4
+<p align="center">
+  <img src="assets/p4-jit-logo.jpeg" alt="P4-JIT Logo" width="500"/>
+</p>
 
-**Compile C/C++ on your PC, execute natively on ESP32-P4 — No firmware reflashing required.**
+<h1 align="center">ESP32-P4 JIT: Dynamic Code Loading for ESP32-P4</h1>
+
+<p align="center">
+  <strong>Compile C/C++ on your PC, execute natively on ESP32-P4 — No firmware reflashing required.</strong>
+</p>
+
+---
 
 ![System Architecture](assets/system-architecture.jpeg)
 
