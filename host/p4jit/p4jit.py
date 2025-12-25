@@ -4,7 +4,8 @@ from typing import Any, Optional, Dict
 
 from .runtime.jit_session import JITSession
 from .runtime.device_manager import DeviceManager
-from .runtime.memory_caps import MALLOC_CAP_SPIRAM, MALLOC_CAP_8BIT
+from .runtime import memory_caps # Import module for inspection
+from .runtime.memory_caps import MALLOC_CAP_SPIRAM, MALLOC_CAP_8BIT # Keep for default args
 from .toolchain.builder import Builder
 from .toolchain.binary_object import BinaryObject
 from .utils.logger import setup_logger, INFO_VERBOSE
@@ -105,6 +106,27 @@ class P4JIT:
         self.builder = Builder() 
         logger.info("P4JIT Initialized.")
 
+    def set_p4_mem_location(self, array, caps: int):
+        """
+        Wraps a NumPy array to attach P4 memory capabilities.
+        Does NOT copy data, just creates a view.
+        
+        Args:
+            array: Input NumPy array
+            caps (int): Memory capabilities (MALLOC_CAP_*)
+            
+        Returns:
+            np.ndarray: View of the array with .p4_caps attribute
+        """
+        import numpy as np
+        
+        class P4Array(np.ndarray):
+            pass
+        
+        view = array.view(P4Array)
+        view.p4_caps = caps
+        return view
+
     def get_heap_stats(self, print_s: bool = True) -> Dict[str, int]:
         """
         Get current heap memory statistics from the device.
@@ -198,3 +220,8 @@ class P4JIT:
             real_args_addr,
             smart_args
         )
+
+# Attach Memory Capabilities to P4JIT class
+for name, val in vars(memory_caps).items():
+    if name.startswith("MALLOC_CAP_"):
+        setattr(P4JIT, name, val)

@@ -39,3 +39,7 @@ output/
 *.swp
 *.swo
 *~
+
+notebooks_prev/
+firmware_prev/
+

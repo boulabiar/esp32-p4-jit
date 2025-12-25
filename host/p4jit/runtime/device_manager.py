@@ -1,6 +1,7 @@
 import struct
 import time
 import serial
+import sys
 from typing import Optional, Tuple, Dict
 from p4jit.utils.logger import setup_logger, INFO_VERBOSE
 
@@ -23,6 +24,12 @@ class DeviceManager:
     Handles low-level communication with the ESP32-P4 JIT firmware.
     Manages memory allocation tracking and enforces safety.
     """
+    # Global registry of active connections: port -> DeviceManager instance
+    # We use sys to persist this across module reloads (e.g. Spyder UMR / IPython)
+    if not hasattr(sys, '_p4jit_active_connections'):
+        sys._p4jit_active_connections = {}
+    _active_connections = sys._p4jit_active_connections
+
     def __init__(self, port: str = None, baudrate: int = 115200):
         self.port = port
         self.baudrate = baudrate
@@ -33,13 +40,37 @@ class DeviceManager:
 
     def connect(self):
         if self.port:
+            # 1. Check if ANY instance is already connected to this port and force disconnect
+            if self.port in DeviceManager._active_connections:
+                logger.warning(f"Port {self.port} is already open by another instance. Forcing disconnect...")
+                try:
+                    old_dm = DeviceManager._active_connections[self.port]
+                    # Avoid recursion if it's the same instance (shouldn't happen usually)
+                    if old_dm != self:
+                        old_dm.disconnect()
+                except Exception as e:
+                    logger.warning(f"Failed to force disconnect old instance: {e}")
+                    # Remove from registry anyway
+                    if self.port in DeviceManager._active_connections:
+                        del DeviceManager._active_connections[self.port]
+
             logger.info(f"Connecting to {self.port} at {self.baudrate} baud...")
             self.serial = serial.Serial(self.port, self.baudrate, timeout=1.0)
+            
+            # Register this connection
+            DeviceManager._active_connections[self.port] = self
             logger.info("Connected.")
 
     def disconnect(self):
         if self.serial and self.serial.is_open:
+            logger.info(f"Disconnecting {self.port}...")
             self.serial.close()
+            
+            # Unregister
+            if self.port and self.port in DeviceManager._active_connections:
+                if DeviceManager._active_connections[self.port] == self:
+                     del DeviceManager._active_connections[self.port]
+                     
             logger.info("Disconnected.")
 
     def _send_packet(self, cmd_id: int, payload: bytes) -> bytes:
@@ -175,19 +206,29 @@ class DeviceManager:
         del self.allocations[address]
         logger.debug(f"Freed memory at 0x{address:08X}")
 
-    def write_memory(self, address: int, data: bytes):
-        # Validation
-        end_addr = address + len(data)
-        valid = False
-        for start, info in self.allocations.items():
-            alloc_end = start + info['size']
-            if start <= address and end_addr <= alloc_end:
-                valid = True
-                break
+    def write_memory(self, address: int, data: bytes, skip_bounds: bool = False):
+        """
+        Write memory to device.
         
-        if not valid:
-            logger.error(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
-            raise PermissionError(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
+        Args:
+            address: Memory address to write to
+            data: Bytes to write
+            skip_bounds: If True, skip allocation table validation (for writing
+                        to external memory regions)
+        """
+        if not skip_bounds:
+            # Validation
+            end_addr = address + len(data)
+            valid = False
+            for start, info in self.allocations.items():
+                alloc_end = start + info['size']
+                if start <= address and end_addr <= alloc_end:
+                    valid = True
+                    break
+            
+            if not valid:
+                logger.error(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
+                raise PermissionError(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
 
         # Chunking might be needed for large writes, but protocol supports arbitrary len
         # Let's assume USB buffer is handled by OS/Driver.
@@ -195,19 +236,32 @@ class DeviceManager:
         payload = struct.pack('<I', address) + data
         self._send_packet(CMD_WRITE_MEM, payload)
 
-    def read_memory(self, address: int, size: int) -> bytes:
-        # Validation
-        end_addr = address + size
-        valid = False
-        for start, info in self.allocations.items():
-            alloc_end = start + info['size']
-            if start <= address and end_addr <= alloc_end:
-                valid = True
-                break
+    def read_memory(self, address: int, size: int, skip_bounds: bool = False) -> bytes:
+        """
+        Read memory from device.
         
-        if not valid:
-            logger.error(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
-            raise PermissionError(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
+        Args:
+            address: Memory address to read from
+            size: Number of bytes to read
+            skip_bounds: If True, skip allocation table validation (for reading 
+                        external memory like camera buffers)
+        
+        Returns:
+            bytes: Memory contents
+        """
+        if not skip_bounds:
+            # Validation
+            end_addr = address + size
+            valid = False
+            for start, info in self.allocations.items():
+                alloc_end = start + info['size']
+                if start <= address and end_addr <= alloc_end:
+                    valid = True
+                    break
+            
+            if not valid:
+                logger.error(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
+                raise PermissionError(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
 
         logger.log(INFO_VERBOSE, f"Reading {size} bytes from 0x{address:08X}")
         payload = struct.pack('<I I', address, size)
