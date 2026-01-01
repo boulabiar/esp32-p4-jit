@@ -5,6 +5,7 @@ __pycache__/
 .Python
 build/
 managed_components/
+records/
 develop-eggs/
 dist/
 downloads/
@@ -42,4 +43,5 @@ output/
 
 notebooks_prev/
 firmware_prev/
+examples/
 
