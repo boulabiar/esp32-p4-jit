@@ -21,12 +21,15 @@ class JITSession:
             self.device.port = port
             logger.info(f"Connecting to specified port: {port}")
             self.device.connect()
-            if not self.device.ping():
+            try:
+                if not self.device.ping():
+                    logger.error(f"Device at {port} did not respond to PING")
+                    raise RuntimeError(f"Device at {port} did not respond to PING")
+                # Query device info and validate protocol version
+                self.device.get_info()
+            except Exception:
                 self.device.disconnect()
-                logger.error(f"Device at {port} did not respond to PING")
-                raise RuntimeError(f"Device at {port} did not respond to PING")
-            # Query device info and validate protocol version
-            self.device.get_info()
+                raise
         else:
             logger.info("Auto-detecting JIT device...")
             found = False

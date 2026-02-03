@@ -180,35 +180,50 @@ class P4JIT:
         
         # 2. Allocate
         logger.log(INFO_VERBOSE, f"Allocating device memory (Align: {alignment})...")
-        
+
         # Calculate sizes
         # temp_bin.total_size includes text, data, rodata.
         alloc_code_size = temp_bin.total_size + 64 # Safety padding
-        
+
         # Args size comes from metadata
         alloc_args_size = temp_bin.metadata['addresses']['args_array_bytes']
-        
+
         real_code_addr = self.session.device.allocate(alloc_code_size, code_caps, alignment)
-        real_args_addr = self.session.device.allocate(alloc_args_size, data_caps, alignment)
-        
-        logger.info(f"  Code Allocated: 0x{real_code_addr:08X} ({alloc_code_size} bytes)")
-        logger.info(f"  Args Allocated: 0x{real_args_addr:08X} ({alloc_args_size} bytes)")
-        
-        # 3. Link (Pass 2 - Re-build with real addresses)
-        logger.log(INFO_VERBOSE, "Pass 2: Re-linking with allocated addresses...")
-        final_bin = self.builder.wrapper.build_with_wrapper(
-            source=source,
-            function_name=function_name,
-            base_address=real_code_addr,
-            arg_address=real_args_addr,
-            output_dir=output_dir,
-            use_firmware_elf=use_firmware_elf
-        )
-        
-        # 4. Upload
-        logger.log(INFO_VERBOSE, "Uploading binary to device...")
-        self.session.device.write_memory(real_code_addr, final_bin.data)
-        
+        real_args_addr = None
+        try:
+            real_args_addr = self.session.device.allocate(alloc_args_size, data_caps, alignment)
+
+            logger.info(f"  Code Allocated: 0x{real_code_addr:08X} ({alloc_code_size} bytes)")
+            logger.info(f"  Args Allocated: 0x{real_args_addr:08X} ({alloc_args_size} bytes)")
+
+            # 3. Link (Pass 2 - Re-build with real addresses)
+            logger.log(INFO_VERBOSE, "Pass 2: Re-linking with allocated addresses...")
+            final_bin = self.builder.wrapper.build_with_wrapper(
+                source=source,
+                function_name=function_name,
+                base_address=real_code_addr,
+                arg_address=real_args_addr,
+                output_dir=output_dir,
+                use_firmware_elf=use_firmware_elf
+            )
+
+            # 4. Upload
+            logger.log(INFO_VERBOSE, "Uploading binary to device...")
+            self.session.device.write_memory(real_code_addr, final_bin.data)
+        except Exception:
+            # Clean up allocations on failure to prevent memory leak
+            logger.warning("Load failed, freeing allocated memory...")
+            try:
+                self.session.device.free(real_code_addr)
+            except Exception as e:
+                logger.debug(f"Failed to free code allocation: {e}")
+            if real_args_addr is not None:
+                try:
+                    self.session.device.free(real_args_addr)
+                except Exception as e:
+                    logger.debug(f"Failed to free args allocation: {e}")
+            raise
+
         # 5. Instantiate
         logger.info("Function loaded successfully.")
         return JITFunction(
