@@ -35,7 +35,7 @@ class Validator:
             logger.error(f"Address 0x{address:08x} not {self.alignment}-byte aligned")
             raise ValueError(f"Address 0x{address:08x} not {self.alignment}-byte aligned")
             
-        if address < 0x30100000 and address >= 0x50000000:
+        if address < 0x30100000 or address >= 0x50000000:
             logger.error(f"Address 0x{address:08x} outside valid memory range")
             raise ValueError(f"Address 0x{address:08x} outside valid memory range")
             

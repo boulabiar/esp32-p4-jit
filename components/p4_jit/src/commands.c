@@ -70,12 +70,22 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         case CMD_ALLOC: {
             if (len < sizeof(cmd_alloc_req_t)) {
                 ESP_LOGE(TAG, "CMD_ALLOC: Payload too short (%lu)", len);
-                return ERR_UNKNOWN_CMD; 
+                return ERR_UNKNOWN_CMD;
             }
             cmd_alloc_req_t *req = (cmd_alloc_req_t*)payload;
-            
-            ESP_LOGI(TAG, "CMD_ALLOC: Size=%lu, Caps=0x%08lX, Align=%lu", 
+
+            ESP_LOGI(TAG, "CMD_ALLOC: Size=%lu, Caps=0x%08lX, Align=%lu",
                      req->size, req->caps, req->alignment);
+
+            // Validate alignment: must be non-zero and power of two
+            if (req->alignment == 0 || (req->alignment & (req->alignment - 1)) != 0) {
+                ESP_LOGE(TAG, "CMD_ALLOC: Invalid alignment %lu (must be non-zero power of two)", req->alignment);
+                cmd_alloc_resp_t *resp = (cmd_alloc_resp_t*)out_payload;
+                resp->address = 0;
+                resp->error_code = ERR_ALLOC_FAIL;
+                *out_len = sizeof(cmd_alloc_resp_t);
+                return ERR_OK;
+            }
 
             void *ptr = heap_caps_aligned_alloc(req->alignment, req->size, req->caps);
             
@@ -143,11 +153,19 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         case CMD_READ_MEM: {
             if (len < sizeof(cmd_read_req_t)) return ERR_UNKNOWN_CMD;
             cmd_read_req_t *req = (cmd_read_req_t*)payload;
-            
-            // Safety check? Python side handles it, but we could check if readable.
-            // For now, blind memcpy.
+
+            // Bounds check: prevent TX buffer overflow
+            // MAX_PAYLOAD_SIZE is defined in protocol.c, use same value here
+            #ifndef MAX_READ_SIZE
+            #define MAX_READ_SIZE (1024 * 1024)  // 1MB max read to match TX buffer
+            #endif
+            if (req->size > MAX_READ_SIZE) {
+                ESP_LOGE(TAG, "CMD_READ_MEM: Requested size %lu exceeds max %d", req->size, MAX_READ_SIZE);
+                return ERR_UNKNOWN_CMD;
+            }
+
             memcpy(out_payload, (void*)req->address, req->size);
-            
+
             *out_len = req->size;
             return ERR_OK;
         }

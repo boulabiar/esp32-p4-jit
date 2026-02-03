@@ -112,6 +112,11 @@ class DeviceManager:
         resp_cmd, resp_flags, resp_len = struct.unpack('<BB I', resp_header_data)
         logger.debug(f"<< CMD {resp_cmd:02X} | Flags: {resp_flags:02X} | Len: {resp_len}")
 
+        # Verify response command matches request
+        if resp_cmd != cmd_id:
+            logger.error(f"Response command mismatch: expected {cmd_id:02X}, got {resp_cmd:02X}")
+            raise RuntimeError(f"Response command mismatch: expected {cmd_id:02X}, got {resp_cmd:02X}")
+
         # Read Payload
         resp_payload = b''
         if resp_len > 0:
@@ -119,17 +124,25 @@ class DeviceManager:
             if len(resp_payload) != resp_len:
                 logger.error(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
                 raise RuntimeError(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
-        
+
         # Read Checksum
         resp_checksum_data = self.serial.read(2)
         if len(resp_checksum_data) < 2:
             logger.error("Timeout waiting for checksum")
             raise RuntimeError("Timeout waiting for checksum")
-            
+
         resp_checksum = struct.unpack('<H', resp_checksum_data)[0]
 
-        # Verify Checksum (Optional but recommended)
-        # ...
+        # Verify Checksum
+        resp_header_full = MAGIC + resp_header_data
+        calc_checksum = sum(resp_header_full)
+        if resp_payload:
+            calc_checksum += sum(resp_payload)
+        calc_checksum &= 0xFFFF
+
+        if calc_checksum != resp_checksum:
+            logger.error(f"Response checksum mismatch: calculated {calc_checksum:04X}, received {resp_checksum:04X}")
+            raise RuntimeError(f"Response checksum mismatch: calculated {calc_checksum:04X}, received {resp_checksum:04X}")
 
         # Check for Error Flag
         if resp_flags == 0x02:
