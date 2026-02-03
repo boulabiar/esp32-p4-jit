@@ -19,8 +19,14 @@ void usb_read_bytes(uint8_t *buffer, size_t len);
 
 /**
  * @brief Write bytes to USB CDC. Blocks until bytes are queued.
- * 
+ *
  * @param buffer Source buffer
  * @param len Number of bytes to write
  */
 void usb_write_bytes(const uint8_t *buffer, size_t len);
+
+/**
+ * @brief Get the actual stream buffer size allocated during init.
+ * @return Size in bytes, or 0 if not initialized
+ */
+size_t usb_transport_get_buffer_size(void);

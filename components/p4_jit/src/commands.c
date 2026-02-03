@@ -283,23 +283,14 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         }
 
         case CMD_WRITE_MEM: {
-            // Support both old format (4 bytes header) and new format (8 bytes header with flags)
-            if (len < 4) return ERR_UNKNOWN_CMD;
+            // Protocol v1.0 format: address(4) + flags(1) + reserved(3) + data
+            if (len < sizeof(cmd_write_req_t)) return ERR_UNKNOWN_CMD;
 
-            uint32_t address = *(uint32_t*)payload;
-            uint8_t flags = 0;
-            uint32_t header_size = 4;  // Default: old format
-
-            // Check if new format with flags (8 bytes header)
-            if (len >= 8) {
-                cmd_write_req_t *req = (cmd_write_req_t*)payload;
-                address = req->address;
-                flags = req->flags;
-                header_size = sizeof(cmd_write_req_t);
-            }
-
-            uint32_t data_len = len - header_size;
-            uint8_t *data_ptr = payload + header_size;
+            cmd_write_req_t *req = (cmd_write_req_t*)payload;
+            uint32_t address = req->address;
+            uint8_t flags = req->flags;
+            uint32_t data_len = len - sizeof(cmd_write_req_t);
+            uint8_t *data_ptr = payload + sizeof(cmd_write_req_t);
 
             // Validate address range unless skip_bounds is set
             bool skip_bounds = (flags & REQ_FLAG_SKIP_BOUNDS) != 0;
@@ -346,20 +337,13 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         }
 
         case CMD_READ_MEM: {
-            // Support both old format (8 bytes) and new format (12 bytes with flags)
-            if (len < 8) return ERR_UNKNOWN_CMD;
+            // Protocol v1.0 format: address(4) + size(4) + flags(1) + reserved(3)
+            if (len < sizeof(cmd_read_req_t)) return ERR_UNKNOWN_CMD;
 
-            uint32_t address = *(uint32_t*)payload;
-            uint32_t size = *(uint32_t*)(payload + 4);
-            uint8_t flags = 0;
-
-            // Check if new format with flags
-            if (len >= 12) {
-                cmd_read_req_t *req = (cmd_read_req_t*)payload;
-                address = req->address;
-                size = req->size;
-                flags = req->flags;
-            }
+            cmd_read_req_t *req = (cmd_read_req_t*)payload;
+            uint32_t address = req->address;
+            uint32_t size = req->size;
+            uint8_t flags = req->flags;
 
             // Bounds check: prevent TX buffer overflow using actual configured size
             size_t max_read = protocol_get_max_payload_size();

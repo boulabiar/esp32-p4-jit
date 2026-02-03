@@ -9,6 +9,7 @@
 
 static const char *TAG = "usb_transport";
 static StreamBufferHandle_t rx_stream_buffer = NULL;
+static size_t rx_stream_buffer_size = 0;  // Actual allocated size
 
 // Buffer for ISR callback to read into before sending to stream buffer
 #define RX_BUF_SIZE 2048
@@ -74,6 +75,7 @@ void usb_transport_init(void)
         ESP_LOGE(TAG, "Failed to create stream buffer (tried all sizes)");
         abort();
     }
+    rx_stream_buffer_size = actual_size;
     ESP_LOGI(TAG, "Stream buffer created: %u bytes", actual_size);
 
     // 2. Install TinyUSB Driver
@@ -134,4 +136,8 @@ void usb_write_bytes(const uint8_t *buffer, size_t len)
         }
     }
     tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
+}
+
+size_t usb_transport_get_buffer_size(void) {
+    return rx_stream_buffer_size;
 }

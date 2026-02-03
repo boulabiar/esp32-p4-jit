@@ -96,6 +96,11 @@ int protocol_init(size_t rx_buffer_size, size_t tx_buffer_size) {
 }
 
 size_t protocol_get_max_payload_size(void) {
+    // Return effective max payload: minimum of protocol buffer and stream buffer
+    size_t stream_buf_size = usb_transport_get_buffer_size();
+    if (stream_buf_size > 0 && stream_buf_size < max_payload_size) {
+        return stream_buf_size;
+    }
     return max_payload_size;
 }
 
