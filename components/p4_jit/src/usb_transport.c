@@ -44,19 +44,37 @@ void usb_transport_init(void)
     ESP_LOGI(TAG, "Initializing USB Transport...");
 
     // 1. Create Stream Buffer
-    // Size must be large enough to hold maximum payload to prevent overflow
-    // Default to 1MB + overhead to match MAX_PAYLOAD_SIZE in protocol.c
+    // Try progressively smaller sizes if allocation fails (memory-constrained devices)
     #ifndef CONFIG_P4_JIT_STREAM_BUFFER_SIZE
     #define CONFIG_P4_JIT_STREAM_BUFFER_SIZE (1024 * 1024 + 4096)
     #endif
 
-    ESP_LOGI(TAG, "Creating stream buffer of size %d bytes", CONFIG_P4_JIT_STREAM_BUFFER_SIZE);
-    rx_stream_buffer = xStreamBufferCreate(CONFIG_P4_JIT_STREAM_BUFFER_SIZE, 1);
+    // Try sizes: configured, 512KB, 256KB, 128KB, 64KB
+    static const size_t buffer_sizes[] = {
+        CONFIG_P4_JIT_STREAM_BUFFER_SIZE,
+        512 * 1024,
+        256 * 1024,
+        128 * 1024,
+        64 * 1024,
+        0  // sentinel
+    };
+
+    size_t actual_size = 0;
+    for (int i = 0; buffer_sizes[i] > 0; i++) {
+        ESP_LOGI(TAG, "Trying stream buffer size: %u bytes", buffer_sizes[i]);
+        rx_stream_buffer = xStreamBufferCreate(buffer_sizes[i], 1);
+        if (rx_stream_buffer != NULL) {
+            actual_size = buffer_sizes[i];
+            break;
+        }
+        ESP_LOGW(TAG, "Failed to allocate %u bytes, trying smaller", buffer_sizes[i]);
+    }
+
     if (rx_stream_buffer == NULL) {
-        ESP_LOGE(TAG, "Failed to create stream buffer");
+        ESP_LOGE(TAG, "Failed to create stream buffer (tried all sizes)");
         abort();
     }
-    ESP_LOGI(TAG, "Stream buffer created");
+    ESP_LOGI(TAG, "Stream buffer created: %u bytes", actual_size);
 
     // 2. Install TinyUSB Driver
     const tinyusb_config_t tusb_cfg = {

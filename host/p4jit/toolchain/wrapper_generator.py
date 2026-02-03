@@ -121,6 +121,7 @@ class WrapperGenerator:
         """Generate include directive for generated header."""
         return f"""
 #include <stdint.h>
+#include <string.h>  // For memcpy (strict aliasing safe type punning)
 #include "{self.header_name}"  // Include generated header
 
 // Wrapper function to handle argument unpacking and return value
@@ -162,13 +163,13 @@ typedef int esp_err_t;
             if category == 'pointer':
                 lines.append(f"    {param_type} {param_name} = ({param_type}) io[{slot_idx}];")
             elif slot_count == 2:
-                # 64-bit type: read from 2 consecutive 32-bit slots
+                # 64-bit type: read from 2 consecutive 32-bit slots (strict aliasing safe)
                 lines.append(f"    {param_type} {param_name};")
                 lines.append(f"    {{")
                 lines.append(f"        uint32_t lo = (uint32_t)io[{slot_idx}];")
                 lines.append(f"        uint32_t hi = (uint32_t)io[{slot_idx + 1}];")
                 lines.append(f"        uint64_t combined = ((uint64_t)hi << 32) | lo;")
-                lines.append(f"        {param_name} = *({param_type}*)&combined;")
+                lines.append(f"        memcpy(&{param_name}, &combined, sizeof({param_name}));")
                 lines.append(f"    }}")
             else:
                 # 32-bit type
@@ -216,9 +217,10 @@ typedef int esp_err_t;
             # Pointers: Cast slot address to uint32_t* and write casted result
             lines.append(f"    *(uint32_t*)&io[{return_idx}] = (uint32_t)result;")
         elif is_64bit:
-            # 64-bit type: write to 2 consecutive 32-bit slots (little-endian)
+            # 64-bit type: write to 2 consecutive 32-bit slots (strict aliasing safe)
             lines.append(f"    {{")
-            lines.append(f"        uint64_t raw = *(uint64_t*)&result;")
+            lines.append(f"        uint64_t raw;")
+            lines.append(f"        memcpy(&raw, &result, sizeof(raw));")
             lines.append(f"        io[{return_idx}] = (int32_t)(raw & 0xFFFFFFFF);        // low 32 bits")
             lines.append(f"        io[{return_idx + 1}] = (int32_t)((raw >> 32) & 0xFFFFFFFF); // high 32 bits")
             lines.append(f"    }}")

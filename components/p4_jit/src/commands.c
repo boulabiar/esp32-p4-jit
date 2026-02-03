@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "protocol.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "esp_cache.h"
@@ -62,10 +63,21 @@ static bool alloc_table_remove(uint32_t address) {
  * @return true if the entire range [address, address+size) is valid
  */
 static bool alloc_table_validate(uint32_t address, uint32_t size) {
+    // Check for overflow (wraparound)
+    if (size > 0 && address > UINT32_MAX - size) {
+        ESP_LOGW(TAG, "Address range overflow detected: 0x%08lX + %lu", address, size);
+        return false;
+    }
+
     uint32_t end_addr = address + size;
     for (int i = 0; i < MAX_ALLOCATIONS; i++) {
         if (allocation_table[i].in_use) {
             uint32_t alloc_start = allocation_table[i].address;
+            // Also check allocation end for overflow
+            if (allocation_table[i].size > 0 &&
+                alloc_start > UINT32_MAX - allocation_table[i].size) {
+                continue;  // Skip malformed allocation
+            }
             uint32_t alloc_end = alloc_start + allocation_table[i].size;
             if (address >= alloc_start && end_addr <= alloc_end) {
                 return true;
@@ -108,6 +120,8 @@ typedef struct {
 
 typedef struct {
     uint32_t address;
+    uint8_t  flags;      // bit 0: skip_bounds (raw access)
+    uint8_t  reserved[3];
     // data follows
 } cmd_write_req_t;
 
@@ -119,7 +133,12 @@ typedef struct {
 typedef struct {
     uint32_t address;
     uint32_t size;
+    uint8_t  flags;      // bit 0: skip_bounds (raw access)
+    uint8_t  reserved[3];
 } cmd_read_req_t;
+
+// Request flags
+#define REQ_FLAG_SKIP_BOUNDS 0x01
 
 typedef struct {
     uint32_t address;
@@ -170,11 +189,9 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             resp->reserved[0] = 0;
             resp->reserved[1] = 0;
 
-            // Get max payload size
-            #ifndef MAX_PAYLOAD_SIZE
-            #define MAX_PAYLOAD_SIZE (1024 * 1024 + 1024)
-            #endif
-            resp->max_payload_size = MAX_PAYLOAD_SIZE;
+            // Get actual max payload size from protocol layer
+            size_t actual_max = protocol_get_max_payload_size();
+            resp->max_payload_size = (actual_max > 0) ? actual_max : (1024 * 1024);
 
             // Get cache line size
             size_t cache_line = 0;
@@ -266,14 +283,28 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         }
 
         case CMD_WRITE_MEM: {
-            if (len < sizeof(cmd_write_req_t)) return ERR_UNKNOWN_CMD;
-            cmd_write_req_t *req = (cmd_write_req_t*)payload;
-            uint32_t data_len = len - sizeof(cmd_write_req_t);
-            uint8_t *data_ptr = payload + sizeof(cmd_write_req_t);
+            // Support both old format (4 bytes header) and new format (8 bytes header with flags)
+            if (len < 4) return ERR_UNKNOWN_CMD;
 
-            // Validate address range is within a tracked allocation
-            if (!alloc_table_validate(req->address, data_len)) {
-                ESP_LOGE(TAG, "CMD_WRITE_MEM: Address 0x%08lX (len=%lu) not in valid allocation", req->address, data_len);
+            uint32_t address = *(uint32_t*)payload;
+            uint8_t flags = 0;
+            uint32_t header_size = 4;  // Default: old format
+
+            // Check if new format with flags (8 bytes header)
+            if (len >= 8) {
+                cmd_write_req_t *req = (cmd_write_req_t*)payload;
+                address = req->address;
+                flags = req->flags;
+                header_size = sizeof(cmd_write_req_t);
+            }
+
+            uint32_t data_len = len - header_size;
+            uint8_t *data_ptr = payload + header_size;
+
+            // Validate address range unless skip_bounds is set
+            bool skip_bounds = (flags & REQ_FLAG_SKIP_BOUNDS) != 0;
+            if (!skip_bounds && !alloc_table_validate(address, data_len)) {
+                ESP_LOGE(TAG, "CMD_WRITE_MEM: Address 0x%08lX (len=%lu) not in valid allocation", address, data_len);
                 cmd_write_resp_t *resp = (cmd_write_resp_t*)out_payload;
                 resp->bytes_written = 0;
                 resp->status = ERR_INVALID_ADDR;
@@ -281,7 +312,7 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
                 return ERR_INVALID_ADDR;
             }
 
-            memcpy((void*)req->address, data_ptr, data_len);
+            memcpy((void*)address, data_ptr, data_len);
 
             // Sync Cache (D-Cache -> RAM -> I-Cache)
             // esp_cache_msync requires address and size to be aligned to cache line size
@@ -291,15 +322,15 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
                 cache_line_size = 64;  // Fallback default
             }
 
-            uint32_t start_addr = req->address;
+            uint32_t start_addr = address;
             uint32_t end_addr = start_addr + data_len;
 
             uint32_t aligned_start = start_addr & ~(cache_line_size - 1);
             uint32_t aligned_end = (end_addr + cache_line_size - 1) & ~(cache_line_size - 1);
             uint32_t aligned_size = aligned_end - aligned_start;
             
-            ESP_LOGI(TAG, "Cache Sync: Orig Addr=0x%08lX, Len=0x%lX -> Aligned Addr=0x%08lX, Len=0x%lX", 
-                     req->address, data_len, aligned_start, aligned_size);
+            ESP_LOGI(TAG, "Cache Sync: Orig Addr=0x%08lX, Len=0x%lX -> Aligned Addr=0x%08lX, Len=0x%lX",
+                     address, data_len, aligned_start, aligned_size);
 
             esp_err_t err = esp_cache_msync((void*)aligned_start, aligned_size, 
                                           ESP_CACHE_MSYNC_FLAG_DIR_C2M | ESP_CACHE_MSYNC_FLAG_INVALIDATE);
@@ -315,27 +346,40 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         }
 
         case CMD_READ_MEM: {
-            if (len < sizeof(cmd_read_req_t)) return ERR_UNKNOWN_CMD;
-            cmd_read_req_t *req = (cmd_read_req_t*)payload;
+            // Support both old format (8 bytes) and new format (12 bytes with flags)
+            if (len < 8) return ERR_UNKNOWN_CMD;
 
-            // Bounds check: prevent TX buffer overflow
-            #ifndef MAX_READ_SIZE
-            #define MAX_READ_SIZE (1024 * 1024)  // 1MB max read to match TX buffer
-            #endif
-            if (req->size > MAX_READ_SIZE) {
-                ESP_LOGE(TAG, "CMD_READ_MEM: Requested size %lu exceeds max %d", req->size, MAX_READ_SIZE);
+            uint32_t address = *(uint32_t*)payload;
+            uint32_t size = *(uint32_t*)(payload + 4);
+            uint8_t flags = 0;
+
+            // Check if new format with flags
+            if (len >= 12) {
+                cmd_read_req_t *req = (cmd_read_req_t*)payload;
+                address = req->address;
+                size = req->size;
+                flags = req->flags;
+            }
+
+            // Bounds check: prevent TX buffer overflow using actual configured size
+            size_t max_read = protocol_get_max_payload_size();
+            if (max_read == 0) max_read = 1024 * 1024;  // Fallback default
+
+            if (size > max_read) {
+                ESP_LOGE(TAG, "CMD_READ_MEM: Requested size %lu exceeds max %u", size, max_read);
                 return ERR_UNKNOWN_CMD;
             }
 
-            // Validate address range is within a tracked allocation
-            if (!alloc_table_validate(req->address, req->size)) {
-                ESP_LOGE(TAG, "CMD_READ_MEM: Address 0x%08lX (len=%lu) not in valid allocation", req->address, req->size);
+            // Validate address range unless skip_bounds is set
+            bool skip_bounds = (flags & REQ_FLAG_SKIP_BOUNDS) != 0;
+            if (!skip_bounds && !alloc_table_validate(address, size)) {
+                ESP_LOGE(TAG, "CMD_READ_MEM: Address 0x%08lX (len=%lu) not in valid allocation", address, size);
                 return ERR_INVALID_ADDR;
             }
 
-            memcpy(out_payload, (void*)req->address, req->size);
+            memcpy(out_payload, (void*)address, size);
 
-            *out_len = req->size;
+            *out_len = size;
             return ERR_OK;
         }
 

@@ -95,6 +95,10 @@ int protocol_init(size_t rx_buffer_size, size_t tx_buffer_size) {
     return 0;
 }
 
+size_t protocol_get_max_payload_size(void) {
+    return max_payload_size;
+}
+
 void protocol_loop(void) {
     // Check if buffers were initialized
     if (!rx_buffer || !tx_buffer) {

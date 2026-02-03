@@ -24,9 +24,12 @@ ERR_OK = 0x00
 PROTOCOL_VERSION_MAJOR = 1
 PROTOCOL_VERSION_MINOR = 0
 
-# Chunk size for large transfers (64KB - header overhead)
-# This ensures reliable transfer without overwhelming device buffers
-CHUNK_SIZE = 64 * 1024 - 8
+# Default chunk size for large transfers (64KB - header overhead)
+# Will be adjusted based on device_info['max_payload_size'] if available
+DEFAULT_CHUNK_SIZE = 64 * 1024 - 16  # Account for header overhead
+
+# Request flags (must match device-side REQ_FLAG_*)
+REQ_FLAG_SKIP_BOUNDS = 0x01
 
 class DeviceManager:
     """
@@ -282,6 +285,13 @@ class DeviceManager:
         del self.allocations[address]
         logger.debug(f"Freed memory at 0x{address:08X}")
 
+    def _get_chunk_size(self) -> int:
+        """Get optimal chunk size based on device info."""
+        if self.device_info and 'max_payload_size' in self.device_info:
+            # Use device's max payload minus header overhead
+            return min(self.device_info['max_payload_size'] - 16, DEFAULT_CHUNK_SIZE)
+        return DEFAULT_CHUNK_SIZE
+
     def write_memory(self, address: int, data: bytes, skip_bounds: bool = False):
         """
         Write memory to device with automatic chunking for large transfers.
@@ -290,10 +300,10 @@ class DeviceManager:
             address: Memory address to write to
             data: Bytes to write
             skip_bounds: If True, skip allocation table validation (for writing
-                        to external memory regions)
+                        to external memory regions like camera buffers)
         """
         if not skip_bounds:
-            # Validation
+            # Host-side validation
             end_addr = address + len(data)
             valid = False
             for start, info in self.allocations.items():
@@ -309,18 +319,25 @@ class DeviceManager:
         total_len = len(data)
         logger.log(INFO_VERBOSE, f"Writing {total_len} bytes to 0x{address:08X}")
 
+        # Get chunk size from device info
+        chunk_size = self._get_chunk_size()
+
+        # Build flags byte
+        flags = REQ_FLAG_SKIP_BOUNDS if skip_bounds else 0
+
         # Chunk large transfers to prevent buffer overflow on device
         offset = 0
         chunk_num = 0
         while offset < total_len:
-            chunk = data[offset:offset + CHUNK_SIZE]
+            chunk = data[offset:offset + chunk_size]
             chunk_addr = address + offset
             chunk_len = len(chunk)
 
-            if total_len > CHUNK_SIZE:
+            if total_len > chunk_size:
                 logger.debug(f"  Chunk {chunk_num}: {chunk_len} bytes @ 0x{chunk_addr:08X}")
 
-            payload = struct.pack('<I', chunk_addr) + chunk
+            # New format: address(4) + flags(1) + reserved(3) + data
+            payload = struct.pack('<I B 3x', chunk_addr, flags) + chunk
             self._send_packet(CMD_WRITE_MEM, payload)
 
             offset += chunk_len
@@ -332,18 +349,18 @@ class DeviceManager:
     def read_memory(self, address: int, size: int, skip_bounds: bool = False) -> bytes:
         """
         Read memory from device.
-        
+
         Args:
             address: Memory address to read from
             size: Number of bytes to read
-            skip_bounds: If True, skip allocation table validation (for reading 
+            skip_bounds: If True, skip allocation table validation (for reading
                         external memory like camera buffers)
-        
+
         Returns:
             bytes: Memory contents
         """
         if not skip_bounds:
-            # Validation
+            # Host-side validation
             end_addr = address + size
             valid = False
             for start, info in self.allocations.items():
@@ -351,13 +368,18 @@ class DeviceManager:
                 if start <= address and end_addr <= alloc_end:
                     valid = True
                     break
-            
+
             if not valid:
                 logger.error(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
                 raise PermissionError(f"Segmentation Fault: Read from 0x{address:08X} out of bounds")
 
         logger.log(INFO_VERBOSE, f"Reading {size} bytes from 0x{address:08X}")
-        payload = struct.pack('<I I', address, size)
+
+        # Build flags byte
+        flags = REQ_FLAG_SKIP_BOUNDS if skip_bounds else 0
+
+        # New format: address(4) + size(4) + flags(1) + reserved(3)
+        payload = struct.pack('<I I B 3x', address, size, flags)
         return self._send_packet(CMD_READ_MEM, payload)
 
     def execute(self, address: int) -> int:

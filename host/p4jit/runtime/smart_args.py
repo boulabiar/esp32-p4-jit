@@ -185,6 +185,18 @@ class SmartArgs:
             # Integers (signed/unsigned) - 32-bit
             return struct.pack('<i', int(arg))
 
+    def _get_args_array_size(self) -> int:
+        """Get the args array size from signature metadata."""
+        # Try to get from signature's addresses metadata
+        if 'addresses' in self.signature:
+            addrs = self.signature['addresses']
+            if 'args_array_size' in addrs:
+                return addrs['args_array_size']
+            if 'args_array_bytes' in addrs:
+                return addrs['args_array_bytes'] // 4
+        # Default fallback
+        return 32
+
     def get_return_value(self, args_addr: int) -> Any:
         """
         Read and convert return value from the args array.
@@ -198,14 +210,18 @@ class SmartArgs:
         # Determine if 64-bit return type
         is_64bit = self._is_64bit_type(return_type)
 
-        # Calculate return offset
-        # Default args array is 32 slots (128 bytes)
-        # 64-bit uses slots 30-31, 32-bit uses slot 31
+        # Get actual array size from signature
+        array_size = self._get_args_array_size()
+
+        # Calculate return offset based on actual array size
+        # 64-bit uses last 2 slots, 32-bit uses last slot
         if is_64bit:
-            return_offset = 30 * 4  # 120 bytes
+            return_slot = array_size - 2
+            return_offset = return_slot * 4
             raw_bytes = self.dm.read_memory(args_addr + return_offset, 8)
         else:
-            return_offset = 31 * 4  # 124 bytes
+            return_slot = array_size - 1
+            return_offset = return_slot * 4
             raw_bytes = self.dm.read_memory(args_addr + return_offset, 4)
 
         if '*' in return_type:
