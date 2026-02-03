@@ -125,13 +125,18 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             memcpy((void*)req->address, data_ptr, data_len);
 
             // Sync Cache (D-Cache -> RAM -> I-Cache)
-            // esp_cache_msync requires address and size to be aligned to cache line size (128 bytes on P4)
-            #define CACHE_LINE_SIZE 128
+            // esp_cache_msync requires address and size to be aligned to cache line size
+            size_t cache_line_size = 0;
+            esp_cache_get_alignment(MALLOC_CAP_SPIRAM, &cache_line_size);
+            if (cache_line_size == 0) {
+                cache_line_size = 64;  // Fallback default
+            }
+
             uint32_t start_addr = req->address;
             uint32_t end_addr = start_addr + data_len;
-            
-            uint32_t aligned_start = start_addr & ~(CACHE_LINE_SIZE - 1);
-            uint32_t aligned_end = (end_addr + CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1);
+
+            uint32_t aligned_start = start_addr & ~(cache_line_size - 1);
+            uint32_t aligned_end = (end_addr + cache_line_size - 1) & ~(cache_line_size - 1);
             uint32_t aligned_size = aligned_end - aligned_start;
             
             ESP_LOGI(TAG, "Cache Sync: Orig Addr=0x%08lX, Len=0x%lX -> Aligned Addr=0x%08lX, Len=0x%lX", 

@@ -112,12 +112,19 @@ class SmartArgs:
         
         # Flatten array to ensure contiguous memory
         flat_arr = arg.ravel()
-        
+
         # Allocate memory on device
         size_bytes = flat_arr.nbytes
-        # Use SPIRAM for data by default
-        logger.log(INFO_VERBOSE, f"Allocating array buffer: {size_bytes} bytes")
-        addr = self.dm.allocate(size_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, 16)
+
+        # Check for .p4_caps attribute, otherwise use default SPIRAM
+        if hasattr(arg, 'p4_caps'):
+            caps = arg.p4_caps
+            logger.log(INFO_VERBOSE, f"Allocating array buffer: {size_bytes} bytes (caps=0x{caps:X} from .p4_caps)")
+        else:
+            caps = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT
+            logger.log(INFO_VERBOSE, f"Allocating array buffer: {size_bytes} bytes (default SPIRAM)")
+
+        addr = self.dm.allocate(size_bytes, caps, 16)
         self.allocations.append(addr)
         
         # Write data

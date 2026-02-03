@@ -99,11 +99,9 @@ class P4JIT:
         logger.info("Initializing P4JIT System...")
         self.session = JITSession()
         self.session.connect(port) # Auto-detect if port is None
-        
-        # Initialize Builder
-        # Builder loads config internally, but we might want to pass config_path if Builder supported it.
-        # Current Builder implementation loads from default relative path.
-        self.builder = Builder() 
+
+        # Initialize Builder with config path
+        self.builder = Builder(config_path=config_path)
         logger.info("P4JIT Initialized.")
 
     def set_p4_mem_location(self, array, caps: int):

@@ -1,5 +1,7 @@
 import yaml
 import tempfile
+import shutil
+import atexit
 import os
 import glob
 from ..utils.logger import setup_logger, INFO_VERBOSE
@@ -13,6 +15,21 @@ from .binary_object import BinaryObject
 from .wrapper_builder import WrapperBuilder
 
 logger = setup_logger(__name__)
+
+# Track all temp directories for cleanup
+_temp_dirs_to_cleanup = []
+
+def _cleanup_temp_dirs():
+    """Cleanup all registered temp directories on exit."""
+    for temp_dir in _temp_dirs_to_cleanup:
+        try:
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
+                logger.debug(f"Cleaned up temp directory: {temp_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup temp directory {temp_dir}: {e}")
+
+atexit.register(_cleanup_temp_dirs)
 
 class Builder:
     """
@@ -48,6 +65,7 @@ class Builder:
         self.validator = Validator(self.config)
         
         self.temp_dir = tempfile.mkdtemp(prefix='esp32_build_')
+        _temp_dirs_to_cleanup.append(self.temp_dir)
         logger.debug(f"Builder using temp directory: {self.temp_dir}")
         
         # Add wrapper builder for automatic wrapper generation
