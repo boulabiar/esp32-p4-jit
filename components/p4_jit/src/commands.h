@@ -5,6 +5,7 @@
 
 // Command IDs
 #define CMD_PING        0x01
+#define CMD_GET_INFO    0x02
 #define CMD_ALLOC       0x10
 #define CMD_FREE        0x11
 #define CMD_WRITE_MEM   0x20
@@ -12,11 +13,16 @@
 #define CMD_EXEC        0x30
 #define CMD_HEAP_INFO   0x40
 
+// Protocol version (increment on breaking changes)
+#define PROTOCOL_VERSION_MAJOR  1
+#define PROTOCOL_VERSION_MINOR  0
+
 // Error Codes
 #define ERR_OK          0x00
 #define ERR_CHECKSUM    0x01
 #define ERR_UNKNOWN_CMD 0x02
 #define ERR_ALLOC_FAIL  0x03
+#define ERR_INVALID_ADDR 0x04
 
 /**
  * @brief Dispatch a command based on ID.

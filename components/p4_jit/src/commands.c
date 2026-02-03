@@ -3,8 +3,90 @@
 #include "esp_heap_caps.h"
 #include "esp_cache.h"
 #include <string.h>
+#include <stdbool.h>
 
 static const char *TAG = "commands";
+
+// ============================================================================
+// Device-side Allocation Tracking
+// ============================================================================
+
+#define MAX_ALLOCATIONS 64  // Maximum tracked allocations
+
+typedef struct {
+    uint32_t address;
+    uint32_t size;
+    bool in_use;
+} allocation_entry_t;
+
+static allocation_entry_t allocation_table[MAX_ALLOCATIONS] = {0};
+
+/**
+ * @brief Track a new allocation in the table.
+ * @return true if tracked successfully, false if table is full
+ */
+static bool alloc_table_add(uint32_t address, uint32_t size) {
+    for (int i = 0; i < MAX_ALLOCATIONS; i++) {
+        if (!allocation_table[i].in_use) {
+            allocation_table[i].address = address;
+            allocation_table[i].size = size;
+            allocation_table[i].in_use = true;
+            ESP_LOGD(TAG, "Alloc tracked [%d]: addr=0x%08lX, size=%lu", i, address, size);
+            return true;
+        }
+    }
+    ESP_LOGW(TAG, "Allocation table full, cannot track 0x%08lX", address);
+    return false;
+}
+
+/**
+ * @brief Remove an allocation from the table.
+ * @return true if found and removed, false if not found
+ */
+static bool alloc_table_remove(uint32_t address) {
+    for (int i = 0; i < MAX_ALLOCATIONS; i++) {
+        if (allocation_table[i].in_use && allocation_table[i].address == address) {
+            allocation_table[i].in_use = false;
+            allocation_table[i].address = 0;
+            allocation_table[i].size = 0;
+            ESP_LOGD(TAG, "Alloc removed [%d]: addr=0x%08lX", i, address);
+            return true;
+        }
+    }
+    ESP_LOGW(TAG, "Address 0x%08lX not found in allocation table", address);
+    return false;
+}
+
+/**
+ * @brief Check if an address range is within a tracked allocation.
+ * @return true if the entire range [address, address+size) is valid
+ */
+static bool alloc_table_validate(uint32_t address, uint32_t size) {
+    uint32_t end_addr = address + size;
+    for (int i = 0; i < MAX_ALLOCATIONS; i++) {
+        if (allocation_table[i].in_use) {
+            uint32_t alloc_start = allocation_table[i].address;
+            uint32_t alloc_end = alloc_start + allocation_table[i].size;
+            if (address >= alloc_start && end_addr <= alloc_end) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief Check if an address is the start of a tracked allocation.
+ * @return true if address matches an allocation start
+ */
+static bool alloc_table_contains(uint32_t address) {
+    for (int i = 0; i < MAX_ALLOCATIONS; i++) {
+        if (allocation_table[i].in_use && allocation_table[i].address == address) {
+            return true;
+        }
+    }
+    return false;
+}
 
 // Helper structs for parsing payloads
 #pragma pack(push, 1)
@@ -58,7 +140,20 @@ typedef struct {
     uint32_t free_internal;
     uint32_t total_internal;
 } cmd_heap_info_resp_t;
+
+typedef struct {
+    uint8_t  protocol_version_major;
+    uint8_t  protocol_version_minor;
+    uint8_t  reserved[2];
+    uint32_t max_payload_size;
+    uint32_t cache_line_size;
+    uint32_t max_allocations;
+    char     firmware_version[16];  // Null-terminated string
+} cmd_get_info_resp_t;
 #pragma pack(pop)
+
+// Firmware version string
+#define FIRMWARE_VERSION "1.0.0"
 
 uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_t *out_payload, uint32_t *out_len) {
     switch (cmd_id) {
@@ -66,6 +161,39 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             if (len > 0) memcpy(out_payload, payload, len);
             *out_len = len;
             return ERR_OK;
+
+        case CMD_GET_INFO: {
+            cmd_get_info_resp_t *resp = (cmd_get_info_resp_t*)out_payload;
+
+            resp->protocol_version_major = PROTOCOL_VERSION_MAJOR;
+            resp->protocol_version_minor = PROTOCOL_VERSION_MINOR;
+            resp->reserved[0] = 0;
+            resp->reserved[1] = 0;
+
+            // Get max payload size
+            #ifndef MAX_PAYLOAD_SIZE
+            #define MAX_PAYLOAD_SIZE (1024 * 1024 + 1024)
+            #endif
+            resp->max_payload_size = MAX_PAYLOAD_SIZE;
+
+            // Get cache line size
+            size_t cache_line = 0;
+            esp_cache_get_alignment(MALLOC_CAP_SPIRAM, &cache_line);
+            resp->cache_line_size = (cache_line > 0) ? cache_line : 64;
+
+            resp->max_allocations = MAX_ALLOCATIONS;
+
+            // Copy firmware version
+            memset(resp->firmware_version, 0, sizeof(resp->firmware_version));
+            strncpy(resp->firmware_version, FIRMWARE_VERSION, sizeof(resp->firmware_version) - 1);
+
+            ESP_LOGI(TAG, "CMD_GET_INFO: Protocol v%d.%d, FW %s, MaxPayload=%lu, CacheLine=%lu",
+                     resp->protocol_version_major, resp->protocol_version_minor,
+                     resp->firmware_version, resp->max_payload_size, resp->cache_line_size);
+
+            *out_len = sizeof(cmd_get_info_resp_t);
+            return ERR_OK;
+        }
 
         case CMD_ALLOC: {
             if (len < sizeof(cmd_alloc_req_t)) {
@@ -88,17 +216,28 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             }
 
             void *ptr = heap_caps_aligned_alloc(req->alignment, req->size, req->caps);
-            
-            if (ptr) {
-                ESP_LOGI(TAG, "CMD_ALLOC: Success at %p", ptr);
-            } else {
-                ESP_LOGE(TAG, "CMD_ALLOC: Failed");
-            }
 
             cmd_alloc_resp_t *resp = (cmd_alloc_resp_t*)out_payload;
-            resp->address = (uint32_t)ptr;
-            resp->error_code = (ptr != NULL) ? 0 : ERR_ALLOC_FAIL;
-            
+
+            if (ptr) {
+                // Track allocation in table
+                if (!alloc_table_add((uint32_t)ptr, req->size)) {
+                    // Table full - free memory and fail
+                    ESP_LOGE(TAG, "CMD_ALLOC: Allocation table full");
+                    heap_caps_free(ptr);
+                    resp->address = 0;
+                    resp->error_code = ERR_ALLOC_FAIL;
+                } else {
+                    ESP_LOGI(TAG, "CMD_ALLOC: Success at %p", ptr);
+                    resp->address = (uint32_t)ptr;
+                    resp->error_code = 0;
+                }
+            } else {
+                ESP_LOGE(TAG, "CMD_ALLOC: Failed");
+                resp->address = 0;
+                resp->error_code = ERR_ALLOC_FAIL;
+            }
+
             *out_len = sizeof(cmd_alloc_resp_t);
             return ERR_OK;
         }
@@ -106,10 +245,20 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
         case CMD_FREE: {
             if (len < sizeof(cmd_free_req_t)) return ERR_UNKNOWN_CMD;
             cmd_free_req_t *req = (cmd_free_req_t*)payload;
-            
+
+            // Validate address is in allocation table
+            if (!alloc_table_contains(req->address)) {
+                ESP_LOGE(TAG, "CMD_FREE: Address 0x%08lX not in allocation table", req->address);
+                uint32_t *status = (uint32_t*)out_payload;
+                *status = ERR_INVALID_ADDR;
+                *out_len = 4;
+                return ERR_INVALID_ADDR;
+            }
+
+            // Remove from tracking and free
+            alloc_table_remove(req->address);
             heap_caps_free((void*)req->address);
-            
-            // Response is just status 0 (handled by dispatch return)
+
             uint32_t *status = (uint32_t*)out_payload;
             *status = 0;
             *out_len = 4;
@@ -121,6 +270,16 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             cmd_write_req_t *req = (cmd_write_req_t*)payload;
             uint32_t data_len = len - sizeof(cmd_write_req_t);
             uint8_t *data_ptr = payload + sizeof(cmd_write_req_t);
+
+            // Validate address range is within a tracked allocation
+            if (!alloc_table_validate(req->address, data_len)) {
+                ESP_LOGE(TAG, "CMD_WRITE_MEM: Address 0x%08lX (len=%lu) not in valid allocation", req->address, data_len);
+                cmd_write_resp_t *resp = (cmd_write_resp_t*)out_payload;
+                resp->bytes_written = 0;
+                resp->status = ERR_INVALID_ADDR;
+                *out_len = sizeof(cmd_write_resp_t);
+                return ERR_INVALID_ADDR;
+            }
 
             memcpy((void*)req->address, data_ptr, data_len);
 
@@ -160,13 +319,18 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             cmd_read_req_t *req = (cmd_read_req_t*)payload;
 
             // Bounds check: prevent TX buffer overflow
-            // MAX_PAYLOAD_SIZE is defined in protocol.c, use same value here
             #ifndef MAX_READ_SIZE
             #define MAX_READ_SIZE (1024 * 1024)  // 1MB max read to match TX buffer
             #endif
             if (req->size > MAX_READ_SIZE) {
                 ESP_LOGE(TAG, "CMD_READ_MEM: Requested size %lu exceeds max %d", req->size, MAX_READ_SIZE);
                 return ERR_UNKNOWN_CMD;
+            }
+
+            // Validate address range is within a tracked allocation
+            if (!alloc_table_validate(req->address, req->size)) {
+                ESP_LOGE(TAG, "CMD_READ_MEM: Address 0x%08lX (len=%lu) not in valid allocation", req->address, req->size);
+                return ERR_INVALID_ADDR;
             }
 
             memcpy(out_payload, (void*)req->address, req->size);
@@ -179,10 +343,20 @@ uint32_t dispatch_command(uint8_t cmd_id, uint8_t *payload, uint32_t len, uint8_
             if (len < sizeof(cmd_exec_req_t)) return ERR_UNKNOWN_CMD;
             cmd_exec_req_t *req = (cmd_exec_req_t*)payload;
 
+            // Validate address is within a tracked allocation
+            // We check for at least 1 byte (the function must start in valid memory)
+            if (!alloc_table_validate(req->address, 1)) {
+                ESP_LOGE(TAG, "CMD_EXEC: Address 0x%08lX not in valid allocation", req->address);
+                cmd_exec_resp_t *resp = (cmd_exec_resp_t*)out_payload;
+                resp->return_value = 0xDEADBEEF;  // Sentinel for invalid exec
+                *out_len = sizeof(cmd_exec_resp_t);
+                return ERR_INVALID_ADDR;
+            }
+
             // Cast and call
             typedef int (*jit_func_t)(void);
             jit_func_t func = (jit_func_t)req->address;
-            
+
             ESP_LOGI(TAG, "Executing at 0x%08lX", req->address);
             int ret = func();
             ESP_LOGI(TAG, "Returned: %d", ret);

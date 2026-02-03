@@ -9,8 +9,8 @@ typedef struct {
     int task_priority;      // Priority of the JIT protocol task
     int task_core_id;       // Core to pin the task to (0, 1, or tskNO_AFFINITY)
     int stack_size;         // Stack size for the JIT task
-    size_t rx_buffer_size;  // Size of USB RX buffer (not yet implemented in protocol.c, reserved)
-    size_t tx_buffer_size;  // Size of USB TX buffer (not yet implemented in protocol.c, reserved)
+    size_t rx_buffer_size;  // Size of RX buffer (0 for default ~1MB, allocated from SPIRAM)
+    size_t tx_buffer_size;  // Size of TX buffer (0 for default ~1MB, allocated from SPIRAM)
 } p4_jit_config_t;
 
 /**

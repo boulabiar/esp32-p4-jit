@@ -9,8 +9,20 @@
 static const char *TAG = "p4_jit";
 static TaskHandle_t s_jit_task_handle = NULL;
 
+// Store config for task entry
+static size_t s_rx_buffer_size = 0;
+static size_t s_tx_buffer_size = 0;
+
 static void jit_task_entry(void *arg) {
     ESP_LOGI(TAG, "JIT Task started on Core %d", xPortGetCoreID());
+
+    // Initialize protocol with configured buffer sizes
+    if (protocol_init(s_rx_buffer_size, s_tx_buffer_size) != 0) {
+        ESP_LOGE(TAG, "Failed to initialize protocol");
+        vTaskDelete(NULL);
+        return;
+    }
+
     protocol_loop();
     // protocol_loop is infinite, but if it returns:
     vTaskDelete(NULL);
@@ -31,6 +43,9 @@ esp_err_t p4_jit_start(const p4_jit_config_t *config) {
         if (config->task_priority > 0) priority = config->task_priority;
         if (config->task_core_id >= -1) core_id = config->task_core_id;
         if (config->stack_size > 0) stack_size = config->stack_size;
+        // Store buffer sizes for protocol initialization
+        s_rx_buffer_size = config->rx_buffer_size;
+        s_tx_buffer_size = config->tx_buffer_size;
     }
 
     ESP_LOGI(TAG, "Initializing USB Transport...");

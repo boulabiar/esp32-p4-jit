@@ -10,6 +10,7 @@ logger = setup_logger(__name__)
 # Protocol Constants
 MAGIC = b'\xA5\x5A'
 CMD_PING = 0x01
+CMD_GET_INFO = 0x02
 CMD_ALLOC = 0x10
 CMD_FREE = 0x11
 CMD_WRITE_MEM = 0x20
@@ -18,6 +19,14 @@ CMD_EXEC = 0x30
 CMD_HEAP_INFO = 0x40
 
 ERR_OK = 0x00
+
+# Expected protocol version (must match device)
+PROTOCOL_VERSION_MAJOR = 1
+PROTOCOL_VERSION_MINOR = 0
+
+# Chunk size for large transfers (64KB - header overhead)
+# This ensures reliable transfer without overwhelming device buffers
+CHUNK_SIZE = 64 * 1024 - 8
 
 class DeviceManager:
     """
@@ -34,9 +43,12 @@ class DeviceManager:
         self.port = port
         self.baudrate = baudrate
         self.serial: Optional[serial.Serial] = None
-        
+
         # Allocation Table: address -> {size, type, caps, align}
         self.allocations: Dict[int, dict] = {}
+
+        # Device info (populated by get_info())
+        self.device_info: Optional[Dict] = None
 
     def connect(self):
         if self.port:
@@ -163,6 +175,57 @@ class DeviceManager:
             logger.debug(f"Ping failed: {e}")
             return False
 
+    def get_info(self) -> Dict:
+        """
+        Get device information including protocol version, firmware version,
+        max payload size, and cache line size.
+
+        Returns:
+            dict: Device information
+
+        Raises:
+            RuntimeError: If protocol version is incompatible
+        """
+        resp = self._send_packet(CMD_GET_INFO, b'')
+
+        if len(resp) < 32:
+            raise RuntimeError(f"Invalid response length for GET_INFO: {len(resp)}")
+
+        # Parse response
+        # protocol_major(1), protocol_minor(1), reserved(2), max_payload(4),
+        # cache_line(4), max_allocations(4), firmware_version(16)
+        proto_major, proto_minor = struct.unpack('<BB', resp[0:2])
+        max_payload, cache_line, max_allocs = struct.unpack('<III', resp[4:16])
+        firmware_version = resp[16:32].rstrip(b'\x00').decode('utf-8', errors='replace')
+
+        info = {
+            'protocol_version_major': proto_major,
+            'protocol_version_minor': proto_minor,
+            'max_payload_size': max_payload,
+            'cache_line_size': cache_line,
+            'max_allocations': max_allocs,
+            'firmware_version': firmware_version,
+        }
+
+        # Validate protocol version
+        if proto_major != PROTOCOL_VERSION_MAJOR:
+            raise RuntimeError(
+                f"Protocol version mismatch: host expects v{PROTOCOL_VERSION_MAJOR}.x, "
+                f"device has v{proto_major}.{proto_minor}. Please update firmware."
+            )
+
+        if proto_minor < PROTOCOL_VERSION_MINOR:
+            logger.warning(
+                f"Device protocol v{proto_major}.{proto_minor} is older than host v{PROTOCOL_VERSION_MAJOR}.{PROTOCOL_VERSION_MINOR}. "
+                f"Some features may not work."
+            )
+
+        logger.info(f"Device: Protocol v{proto_major}.{proto_minor}, FW {firmware_version}, "
+                    f"MaxPayload={max_payload}, CacheLine={cache_line}")
+
+        self.device_info = info
+        return info
+
     def allocate(self, size: int, caps: int, alignment: int) -> int:
         """
         Allocate memory on the device.
@@ -221,8 +284,8 @@ class DeviceManager:
 
     def write_memory(self, address: int, data: bytes, skip_bounds: bool = False):
         """
-        Write memory to device.
-        
+        Write memory to device with automatic chunking for large transfers.
+
         Args:
             address: Memory address to write to
             data: Bytes to write
@@ -238,16 +301,33 @@ class DeviceManager:
                 if start <= address and end_addr <= alloc_end:
                     valid = True
                     break
-            
+
             if not valid:
                 logger.error(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
                 raise PermissionError(f"Segmentation Fault: Write to 0x{address:08X} out of bounds")
 
-        # Chunking might be needed for large writes, but protocol supports arbitrary len
-        # Let's assume USB buffer is handled by OS/Driver.
-        logger.log(INFO_VERBOSE, f"Writing {len(data)} bytes to 0x{address:08X}")
-        payload = struct.pack('<I', address) + data
-        self._send_packet(CMD_WRITE_MEM, payload)
+        total_len = len(data)
+        logger.log(INFO_VERBOSE, f"Writing {total_len} bytes to 0x{address:08X}")
+
+        # Chunk large transfers to prevent buffer overflow on device
+        offset = 0
+        chunk_num = 0
+        while offset < total_len:
+            chunk = data[offset:offset + CHUNK_SIZE]
+            chunk_addr = address + offset
+            chunk_len = len(chunk)
+
+            if total_len > CHUNK_SIZE:
+                logger.debug(f"  Chunk {chunk_num}: {chunk_len} bytes @ 0x{chunk_addr:08X}")
+
+            payload = struct.pack('<I', chunk_addr) + chunk
+            self._send_packet(CMD_WRITE_MEM, payload)
+
+            offset += chunk_len
+            chunk_num += 1
+
+        if chunk_num > 1:
+            logger.log(INFO_VERBOSE, f"Write complete: {chunk_num} chunks transferred")
 
     def read_memory(self, address: int, size: int, skip_bounds: bool = False) -> bytes:
         """

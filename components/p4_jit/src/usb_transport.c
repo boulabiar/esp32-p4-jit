@@ -17,17 +17,24 @@ static uint8_t rx_temp_buf[RX_BUF_SIZE];
 static void rx_callback(int itf, cdcacm_event_t *event)
 {
     size_t rx_size = 0;
-    
+
     // Read from TinyUSB internal buffer
     esp_err_t ret = tinyusb_cdcacm_read(itf, rx_temp_buf, RX_BUF_SIZE, &rx_size);
     if (ret == ESP_OK && rx_size > 0) {
-        // Send to StreamBuffer
-        // We use a short timeout (0) because this is a callback (context might be ISR or Task depending on stack)
-        // TinyUSB callbacks are usually in a task context (tusb task), so we can block slightly or just fail.
-        // But xStreamBufferSend is safe.
+        // Send to StreamBuffer with a short timeout
+        // If buffer is full, retry with blocking to avoid data loss
         size_t sent = xStreamBufferSend(rx_stream_buffer, rx_temp_buf, rx_size, 0);
         if (sent != rx_size) {
-            ESP_LOGW(TAG, "StreamBuffer overflow, dropped %d bytes", rx_size - sent);
+            // First attempt failed, try again with blocking (up to 100ms)
+            size_t remaining = rx_size - sent;
+            size_t sent2 = xStreamBufferSend(rx_stream_buffer,
+                                              rx_temp_buf + sent,
+                                              remaining,
+                                              pdMS_TO_TICKS(100));
+            if (sent2 != remaining) {
+                ESP_LOGE(TAG, "StreamBuffer overflow, dropped %d bytes (buffer full)",
+                         remaining - sent2);
+            }
         }
     }
 }
@@ -37,11 +44,13 @@ void usb_transport_init(void)
     ESP_LOGI(TAG, "Initializing USB Transport...");
 
     // 1. Create Stream Buffer
-    // Use configured buffer size or default to 16KB if not set
+    // Size must be large enough to hold maximum payload to prevent overflow
+    // Default to 1MB + overhead to match MAX_PAYLOAD_SIZE in protocol.c
     #ifndef CONFIG_P4_JIT_STREAM_BUFFER_SIZE
-    #define CONFIG_P4_JIT_STREAM_BUFFER_SIZE (16 * 1024)
+    #define CONFIG_P4_JIT_STREAM_BUFFER_SIZE (1024 * 1024 + 4096)
     #endif
-    
+
+    ESP_LOGI(TAG, "Creating stream buffer of size %d bytes", CONFIG_P4_JIT_STREAM_BUFFER_SIZE);
     rx_stream_buffer = xStreamBufferCreate(CONFIG_P4_JIT_STREAM_BUFFER_SIZE, 1);
     if (rx_stream_buffer == NULL) {
         ESP_LOGE(TAG, "Failed to create stream buffer");

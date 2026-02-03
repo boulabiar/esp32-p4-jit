@@ -12,12 +12,17 @@ class SmartArgs:
     """
     Handles automatic argument processing for remote functions.
     - Converts NumPy arrays to device memory allocations.
-    - Packs arguments into binary blob.
+    - Packs arguments into binary blob (supports 64-bit types).
     - Reads and converts return values.
     - Manages memory cleanup.
     - Handles automatic sync-back of arrays if enabled.
     """
-    
+
+    # Types that require 64-bit (2 slots / 8 bytes)
+    _64BIT_TYPES = {'int64_t', 'uint64_t', 'int64', 'uint64', 'double',
+                   'long long', 'unsigned long long', 'long long int',
+                   'unsigned long long int'}
+
     def __init__(self, device_manager, signature: Dict[str, Any], sync_enabled: bool = True):
         self.dm = device_manager
         self.signature = signature
@@ -53,6 +58,13 @@ class SmartArgs:
             self.reverse_type_map['unsigned long'] = 'uint32'
             self.reverse_type_map['char'] = 'int8'
             self.reverse_type_map['unsigned char'] = 'uint8'
+            # 64-bit types
+            self.reverse_type_map['long long'] = 'int64'
+            self.reverse_type_map['long long int'] = 'int64'
+            self.reverse_type_map['unsigned long long'] = 'uint64'
+            self.reverse_type_map['unsigned long long int'] = 'uint64'
+            self.reverse_type_map['int64_t'] = 'int64'
+            self.reverse_type_map['uint64_t'] = 'uint64'
         except Exception as e:
             logger.error(f"Failed to load numpy type config: {e}")
             raise e
@@ -143,51 +155,84 @@ class SmartArgs:
         # Return address as 32-bit integer
         return struct.pack('<I', addr)
 
+    def _is_64bit_type(self, type_str: str) -> bool:
+        """Check if a type requires 64-bit (2 slots)."""
+        clean_type = type_str.replace('const', '').replace('volatile', '').strip()
+        return clean_type in self._64BIT_TYPES
+
     def _handle_value(self, arg: Any, param_type: str) -> bytes:
         """Handle scalar value arguments."""
         # Enforce NumPy types
         if not isinstance(arg, (np.generic, np.ndarray)):
             logger.warning(f"Using standard python types ({type(arg)}) is deprecated. Please use np.int32, np.float32 etc.")
-            # raise TypeError(f"Smart Args requires NumPy types for all arguments. Got {type(arg)} for param type {param_type}. Please use np.int32(), np.float32(), etc.")
 
+        # Handle 64-bit types (use 2 slots / 8 bytes)
+        if self._is_64bit_type(param_type):
+            if 'double' in param_type:
+                # Double: pack as 64-bit float (little-endian)
+                return struct.pack('<d', float(arg))
+            elif 'unsigned' in param_type or 'uint' in param_type:
+                # Unsigned 64-bit integer
+                return struct.pack('<Q', int(arg) & 0xFFFFFFFFFFFFFFFF)
+            else:
+                # Signed 64-bit integer
+                return struct.pack('<q', int(arg))
+
+        # 32-bit types (1 slot / 4 bytes)
         if 'float' in param_type:
             return struct.pack('<f', float(arg))
-        elif 'double' in param_type:
-            # Wrapper truncates to float (32-bit)
-            return struct.pack('<f', float(arg))
         else:
-            # Integers (signed/unsigned)
-            # We pack as 32-bit int. The wrapper handles casting.
+            # Integers (signed/unsigned) - 32-bit
             return struct.pack('<i', int(arg))
 
     def get_return_value(self, args_addr: int) -> Any:
         """
-        Read and convert return value from the last slot of args array.
+        Read and convert return value from the args array.
+        64-bit types use 2 consecutive slots.
         """
         return_type = self.signature['return_type']
-        
+
         if return_type == 'void':
             return None
-            
-        # Read the last slot (index 31)
-        # return value is at offset 124 (31 * 4)
-        return_offset = 124 
-        raw_bytes = self.dm.read_memory(args_addr + return_offset, 4)
-        
+
+        # Determine if 64-bit return type
+        is_64bit = self._is_64bit_type(return_type)
+
+        # Calculate return offset
+        # Default args array is 32 slots (128 bytes)
+        # 64-bit uses slots 30-31, 32-bit uses slot 31
+        if is_64bit:
+            return_offset = 30 * 4  # 120 bytes
+            raw_bytes = self.dm.read_memory(args_addr + return_offset, 8)
+        else:
+            return_offset = 31 * 4  # 124 bytes
+            raw_bytes = self.dm.read_memory(args_addr + return_offset, 4)
+
         if '*' in return_type:
             # Pointer -> return address (uint32)
             val = struct.unpack('<I', raw_bytes)[0]
             return np.uint32(val)
-            
-        elif 'float' in return_type or 'double' in return_type:
-            # Float/Double -> return float32
+
+        elif is_64bit:
+            # 64-bit types
+            if 'double' in return_type:
+                val = struct.unpack('<d', raw_bytes)[0]
+                return np.float64(val)
+            elif 'unsigned' in return_type or 'uint' in return_type:
+                val = struct.unpack('<Q', raw_bytes)[0]
+                return np.uint64(val)
+            else:
+                val = struct.unpack('<q', raw_bytes)[0]
+                return np.int64(val)
+
+        elif 'float' in return_type:
             val = struct.unpack('<f', raw_bytes)[0]
             return np.float32(val)
-            
+
         else:
-            # Integers
+            # 32-bit integers
             val_i32 = struct.unpack('<i', raw_bytes)[0]
-            
+
             if return_type in self.reverse_type_map:
                 dtype_str = self.reverse_type_map[return_type]
                 return np.dtype(dtype_str).type(val_i32)

@@ -25,6 +25,8 @@ class JITSession:
                 self.device.disconnect()
                 logger.error(f"Device at {port} did not respond to PING")
                 raise RuntimeError(f"Device at {port} did not respond to PING")
+            # Query device info and validate protocol version
+            self.device.get_info()
         else:
             logger.info("Auto-detecting JIT device...")
             found = False
@@ -39,13 +41,18 @@ class JITSession:
                     self.device.port = p.device
                     self.device.connect()
                     if self.device.ping():
+                        # Query device info and validate protocol version
+                        self.device.get_info()
                         found = True
                         logger.info(f"Found JIT Device at {p.device}")
                         break
                     self.device.disconnect()
                 except Exception as e:
                     logger.debug(f"Probe failed for {p.device}: {e}")
-                    pass
+                    try:
+                        self.device.disconnect()
+                    except:
+                        pass
             
             if not found:
                 logger.critical("Could not find JIT Device on any port")

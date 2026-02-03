@@ -2,6 +2,7 @@
 #include "usb_transport.h"
 #include "commands.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -19,14 +20,16 @@ typedef struct {
 } packet_header_t;
 #pragma pack(pop)
 
-// Max payload size (1MB + overhead)
+// Default max payload size (1MB + overhead)
 #ifdef CONFIG_P4_JIT_PAYLOAD_BUFFER_SIZE
-#define MAX_PAYLOAD_SIZE (CONFIG_P4_JIT_PAYLOAD_BUFFER_SIZE + 1024)
+#define DEFAULT_BUFFER_SIZE (CONFIG_P4_JIT_PAYLOAD_BUFFER_SIZE + 1024)
 #else
-#define MAX_PAYLOAD_SIZE (1024 * 1024 + 1024)
+#define DEFAULT_BUFFER_SIZE (1024 * 1024 + 1024)
 #endif
+
 static uint8_t *rx_buffer = NULL;
 static uint8_t *tx_buffer = NULL;
+static size_t max_payload_size = 0;
 
 static uint16_t calculate_checksum(const uint8_t *data, size_t len) {
     uint16_t sum = 0;
@@ -58,18 +61,52 @@ void send_response(uint8_t cmd_id, uint8_t flags, uint8_t *payload, uint32_t len
     usb_write_bytes((uint8_t*)&checksum, 2);
 }
 
-void protocol_loop(void) {
-    // Allocate buffers in PSRAM if possible, or SRAM
-    // For now, let's use malloc. In a real scenario, we might want specific caps.
-    rx_buffer = malloc(MAX_PAYLOAD_SIZE);
-    tx_buffer = malloc(MAX_PAYLOAD_SIZE);
-    
-    if (!rx_buffer || !tx_buffer) {
-        ESP_LOGE(TAG, "Failed to allocate buffers");
-        return;
+int protocol_init(size_t rx_buffer_size, size_t tx_buffer_size) {
+    // Use provided sizes or defaults
+    size_t rx_size = (rx_buffer_size > 0) ? rx_buffer_size : DEFAULT_BUFFER_SIZE;
+    size_t tx_size = (tx_buffer_size > 0) ? tx_buffer_size : DEFAULT_BUFFER_SIZE;
+
+    // Store max payload size (smaller of the two buffers minus header overhead)
+    max_payload_size = (rx_size < tx_size) ? rx_size : tx_size;
+
+    ESP_LOGI(TAG, "Allocating protocol buffers: RX=%u, TX=%u bytes", rx_size, tx_size);
+
+    // Try SPIRAM first (with 8-bit access), fall back to internal RAM
+    rx_buffer = heap_caps_malloc(rx_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!rx_buffer) {
+        ESP_LOGW(TAG, "SPIRAM allocation failed for RX, trying internal RAM");
+        rx_buffer = heap_caps_malloc(rx_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     }
 
-    ESP_LOGI(TAG, "Protocol loop started");
+    tx_buffer = heap_caps_malloc(tx_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!tx_buffer) {
+        ESP_LOGW(TAG, "SPIRAM allocation failed for TX, trying internal RAM");
+        tx_buffer = heap_caps_malloc(tx_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    }
+
+    if (!rx_buffer || !tx_buffer) {
+        ESP_LOGE(TAG, "Failed to allocate protocol buffers");
+        if (rx_buffer) { heap_caps_free(rx_buffer); rx_buffer = NULL; }
+        if (tx_buffer) { heap_caps_free(tx_buffer); tx_buffer = NULL; }
+        return -1;
+    }
+
+    ESP_LOGI(TAG, "Protocol buffers allocated (RX: %p, TX: %p)", rx_buffer, tx_buffer);
+    return 0;
+}
+
+void protocol_loop(void) {
+    // Check if buffers were initialized
+    if (!rx_buffer || !tx_buffer) {
+        ESP_LOGE(TAG, "Protocol buffers not initialized, call protocol_init() first");
+        // Try to initialize with defaults as fallback
+        if (protocol_init(0, 0) != 0) {
+            ESP_LOGE(TAG, "Failed to allocate buffers");
+            return;
+        }
+    }
+
+    ESP_LOGI(TAG, "Protocol loop started (max_payload=%u)", max_payload_size);
 
     while (1) {
         // 1. Sync: Look for Magic
@@ -89,10 +126,10 @@ void protocol_loop(void) {
         usb_read_bytes((uint8_t*)&header.payload_len, 4);
 
         // 3. Read Payload
-        if (header.payload_len > MAX_PAYLOAD_SIZE) {
-            ESP_LOGE(TAG, "Payload too large: %lu", header.payload_len);
+        if (header.payload_len > max_payload_size) {
+            ESP_LOGE(TAG, "Payload too large: %lu (max: %u)", header.payload_len, max_payload_size);
             // Flush? Or just reset loop.
-            continue; 
+            continue;
         }
         if (header.payload_len > 0) {
             usb_read_bytes(rx_buffer, header.payload_len);

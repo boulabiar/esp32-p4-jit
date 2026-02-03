@@ -6,8 +6,14 @@ logger = setup_logger(__name__)
 class WrapperGenerator:
     """
     Generate temp.c wrapper code for memory-mapped I/O argument passing.
+    Supports 64-bit types (int64, uint64, double) using 2 consecutive 32-bit slots.
     """
-    
+
+    # Types that require 64-bit (2 slots)
+    _64BIT_TYPES = {'int64_t', 'uint64_t', 'int64', 'uint64', 'double',
+                   'long long', 'unsigned long long', 'long long int',
+                   'unsigned long long int'}
+
     def __init__(self, config, signature_data, original_source, arg_address):
         self.config = config
         self.signature = signature_data
@@ -17,26 +23,68 @@ class WrapperGenerator:
         self.header_name = os.path.splitext(self.original_source_basename)[0] + '.h'
         self.arg_address = arg_address
         self.args_array_size = config['wrapper']['args_array_size']
+
+    def _is_64bit_type(self, type_str: str) -> bool:
+        """Check if a type requires 64-bit (2 slots)."""
+        # Remove const/volatile qualifiers and whitespace
+        clean_type = type_str.replace('const', '').replace('volatile', '').strip()
+        return clean_type in self._64BIT_TYPES
+
+    def _calculate_slot_layout(self):
+        """
+        Calculate slot indices for each parameter and return value.
+        Returns: list of (slot_index, slot_count) tuples for each param, plus return slot info
+        """
+        layout = []
+        current_slot = 0
+
+        for param in self.signature['parameters']:
+            if param['category'] == 'pointer':
+                # Pointers are always 32-bit on this platform
+                slot_count = 1
+            elif self._is_64bit_type(param['type']):
+                slot_count = 2
+            else:
+                slot_count = 1
+
+            layout.append((current_slot, slot_count))
+            current_slot += slot_count
+
+        # Return value uses last 1 or 2 slots depending on type
+        return_type = self.signature['return_type']
+        if return_type != 'void' and self._is_64bit_type(return_type):
+            return_slot_count = 2
+        else:
+            return_slot_count = 1
+
+        return layout, current_slot, return_slot_count
         
     def validate_args_count(self):
-        """Validate argument count fits in array (reserve last slot for return)."""
-        param_count = len(self.signature['parameters'])
-        max_args = self.args_array_size - 1
-        
-        if param_count > max_args:
-            logger.error(f"Arg count validation failed: {param_count} > {max_args}")
+        """Validate argument slots fit in array (reserve slots for return)."""
+        layout, total_param_slots, return_slot_count = self._calculate_slot_layout()
+
+        # Total slots needed: param slots + return slots
+        max_slots = self.args_array_size
+        needed_slots = total_param_slots + return_slot_count
+
+        if needed_slots > max_slots:
+            logger.error(f"Slot count validation failed: {needed_slots} > {max_slots}")
             raise ValueError(
-                f"Function '{self.signature['name']}' has {param_count} parameters "
-                f"but args array supports maximum {max_args} arguments.\n"
-                f"Args array size: {self.args_array_size} slots "
-                f"({self.args_array_size * 4} bytes)\n"
-                f"Last slot [index {self.args_array_size - 1}] reserved for return value.\n"
+                f"Function '{self.signature['name']}' needs {needed_slots} slots "
+                f"({total_param_slots} for args + {return_slot_count} for return) "
+                f"but args array has {max_slots} slots.\n"
+                f"Note: 64-bit types (int64, uint64, double) use 2 slots each.\n"
                 f"Solution: Increase 'args_array_size' in config/toolchain.yaml"
             )
-    
+
     def calculate_return_index(self):
-        """Calculate index for return value (last slot in array)."""
-        return self.args_array_size - 1
+        """Calculate index for return value (last 1 or 2 slots in array)."""
+        return_type = self.signature['return_type']
+        if return_type != 'void' and self._is_64bit_type(return_type):
+            # 64-bit return uses 2 slots, return the first of the two
+            return self.args_array_size - 2
+        else:
+            return self.args_array_size - 1
     
     def generate_wrapper(self):
         """Generate complete wrapper code."""
@@ -101,24 +149,36 @@ typedef int esp_err_t;
     def _generate_arg_reads(self):
         """Generate code to read arguments from I/O memory."""
         lines = []
-        
+        layout, _, _ = self._calculate_slot_layout()
+
         for idx, param in enumerate(self.signature['parameters']):
             param_name = param['name']
             param_type = param['type']
             category = param['category']
-            
-            lines.append(f"    // Argument {idx}: {category.upper()} type {param_type}")
-            
+            slot_idx, slot_count = layout[idx]
+
+            lines.append(f"    // Argument {idx}: {category.upper()} type {param_type} (slot {slot_idx}, {slot_count} slot(s))")
+
             if category == 'pointer':
-                lines.append(f"    {param_type} {param_name} = ({param_type}) io[{idx}];")
+                lines.append(f"    {param_type} {param_name} = ({param_type}) io[{slot_idx}];")
+            elif slot_count == 2:
+                # 64-bit type: read from 2 consecutive 32-bit slots
+                lines.append(f"    {param_type} {param_name};")
+                lines.append(f"    {{")
+                lines.append(f"        uint32_t lo = (uint32_t)io[{slot_idx}];")
+                lines.append(f"        uint32_t hi = (uint32_t)io[{slot_idx + 1}];")
+                lines.append(f"        uint64_t combined = ((uint64_t)hi << 32) | lo;")
+                lines.append(f"        {param_name} = *({param_type}*)&combined;")
+                lines.append(f"    }}")
             else:
-                if 'float' in param_type or 'double' in param_type:
-                    lines.append(f"    {param_type} {param_name} = *({param_type}*)& io[{idx}];")
+                # 32-bit type
+                if 'float' in param_type:
+                    lines.append(f"    {param_type} {param_name} = *(float*)&io[{slot_idx}];")
                 else:
-                    lines.append(f"    {param_type} {param_name} = *({param_type}*)& io[{idx}];")
-            
+                    lines.append(f"    {param_type} {param_name} = *({param_type}*)&io[{slot_idx}];")
+
             lines.append("")
-        
+
         return '\n'.join(lines)
     
     def _generate_function_call(self):
@@ -144,33 +204,33 @@ typedef int esp_err_t;
         """Generate code to write result to I/O memory."""
         return_type = self.signature['return_type']
         return_idx = self.calculate_return_index()
-        
+
         if return_type == 'void':
             return f"    // No return value (void function)\n"
-        
-        lines = [f"    // Write result ({return_type}) to slot {return_idx}"]
-        
-        # Use explicit pointer casting to write the result
-        # This avoids implicit casting issues and preserves the raw bit representation
-        
+
+        is_64bit = self._is_64bit_type(return_type)
+        slot_info = f"slot {return_idx}" if not is_64bit else f"slots {return_idx}-{return_idx+1}"
+        lines = [f"    // Write result ({return_type}) to {slot_info}"]
+
         if '*' in return_type:
             # Pointers: Cast slot address to uint32_t* and write casted result
             lines.append(f"    *(uint32_t*)&io[{return_idx}] = (uint32_t)result;")
+        elif is_64bit:
+            # 64-bit type: write to 2 consecutive 32-bit slots (little-endian)
+            lines.append(f"    {{")
+            lines.append(f"        uint64_t raw = *(uint64_t*)&result;")
+            lines.append(f"        io[{return_idx}] = (int32_t)(raw & 0xFFFFFFFF);        // low 32 bits")
+            lines.append(f"        io[{return_idx + 1}] = (int32_t)((raw >> 32) & 0xFFFFFFFF); // high 32 bits")
+            lines.append(f"    }}")
         elif return_type == 'float':
             # Float: Cast slot address to float* and write result
             lines.append(f"    *(float*)&io[{return_idx}] = result;")
-        elif return_type == 'double':
-            # Double: Cast to float (truncation) as we only have 32-bit slots
-            # Ideally we should use 2 slots for double, but for now we stick to 32-bit limitation
-            lines.append(f"    *(float*)&io[{return_idx}] = (float)result;")
         else:
             # Integers (int8, uint8, int16, uint16, int32, uint32, etc.)
-            # Cast slot address to the specific type pointer and write result
-            # This handles sign/zero extension correctly by writing only the necessary bytes
             lines.append(f"    *({return_type}*)&io[{return_idx}] = result;")
-        
+
         lines.append("")
-        
+
         return '\n'.join(lines)
     
     def _generate_function_end(self):
