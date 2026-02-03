@@ -181,8 +181,11 @@ class SmartArgs:
         # 32-bit types (1 slot / 4 bytes)
         if 'float' in param_type:
             return struct.pack('<f', float(arg))
+        elif 'unsigned' in param_type or 'uint' in param_type:
+            # Unsigned 32-bit integer
+            return struct.pack('<I', int(arg) & 0xFFFFFFFF)
         else:
-            # Integers (signed/unsigned) - 32-bit
+            # Signed 32-bit integer
             return struct.pack('<i', int(arg))
 
     def _get_args_array_size(self) -> int:

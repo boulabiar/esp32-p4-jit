@@ -412,7 +412,7 @@ class DeviceManager:
         payload = struct.pack('<I', address)
         resp = self._send_packet(CMD_EXEC, payload)
         
-        ret_val = struct.unpack('<I', resp)[0]
+        ret_val = struct.unpack('<i', resp)[0]  # Signed to preserve negative returns
         logger.debug(f"Execution finished. Return Value: {ret_val}")
         return ret_val
 

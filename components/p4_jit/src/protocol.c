@@ -137,7 +137,16 @@ void protocol_loop(void) {
         // 3. Read Payload
         if (header.payload_len > max_payload_size) {
             ESP_LOGE(TAG, "Payload too large: %lu (max: %u)", header.payload_len, max_payload_size);
-            // Flush? Or just reset loop.
+            // Must drain payload + checksum to avoid protocol desync
+            // Read in chunks to avoid stack overflow for very large payloads
+            uint8_t drain_buf[256];
+            size_t remaining = header.payload_len + 2;  // payload + 2-byte checksum
+            while (remaining > 0) {
+                size_t chunk = (remaining < sizeof(drain_buf)) ? remaining : sizeof(drain_buf);
+                usb_read_bytes(drain_buf, chunk);
+                remaining -= chunk;
+            }
+            ESP_LOGW(TAG, "Drained %lu bytes to resync", header.payload_len + 2);
             continue;
         }
         if (header.payload_len > 0) {
