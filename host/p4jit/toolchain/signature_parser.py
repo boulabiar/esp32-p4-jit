@@ -89,62 +89,105 @@ class SignatureParser:
         """
         Extract the function signature string (prototype) from source code.
         Strategy:
-        1. Find the line containing the function name.
-        2. Extract text before the name (return type).
+        1. Find the line containing the function name that looks like a definition.
+        2. Extract text before the name (return type), filtering out common attributes.
         3. Extract text after the name (argument list) up to the closing parenthesis.
         4. Construct a clean prototype: "ReturnType FunctionName(Args);"
         """
         lines = source_code.splitlines()
-        
-        for i, line in enumerate(lines):
-            if func_name in line:
-                # Check if this looks like a definition start
-                
-                # Find start of name
-                idx = line.find(func_name)
-                if idx == -1: continue
-                
-                # Check if it's a call or definition
-                # Look ahead for (
-                rest = line[idx + len(func_name):].strip()
-                if not rest.startswith('('):
-                    continue
-                    
-                # It matches "Name("
-                # Now capture the return type (preceding text)
-                return_type_part = line[:idx].strip()
-                
-                # Now capture arguments. They might span multiple lines.
-                # We start from the opening (
-                
-                combined_text = source_code[source_code.find(line):] # Start from this line
-                
-                # Simple parenthesis counter
-                balance = 0
-                args_end_idx = -1
-                
-                # Find the first ( relative to combined_text
-                start_paren = combined_text.find('(')
-                
-                if start_paren == -1: continue
 
-                for j, char in enumerate(combined_text[start_paren:]):
-                    if char == '(':
-                        balance += 1
-                    elif char == ')':
-                        balance -= 1
-                        if balance == 0:
-                            args_end_idx = start_paren + j
-                            break
-                
-                if args_end_idx != -1:
-                    args_part = combined_text[start_paren:args_end_idx+1]
-                    
-                    # Construct prototype
-                    prototype_str = f"{return_type_part} {func_name}{args_part};"
-                    logger.debug(f"Extracted Signature: {prototype_str}")
-                    return prototype_str
-                    
+        # Build line offset table for precise positioning
+        line_offsets = [0]
+        for line in lines:
+            line_offsets.append(line_offsets[-1] + len(line) + 1)  # +1 for newline
+
+        # Common ESP-IDF/GCC attributes to strip from return type
+        STRIP_ATTRIBUTES = [
+            'IRAM_ATTR', 'DRAM_ATTR', 'RTC_IRAM_ATTR', 'RTC_DATA_ATTR',
+            'EXT_RAM_ATTR', '__attribute__', 'static', 'inline', 'extern',
+            'FORCE_INLINE_ATTR', 'NOINLINE_ATTR'
+        ]
+
+        for i, line in enumerate(lines):
+            # Skip comments
+            stripped = line.strip()
+            if stripped.startswith('//') or stripped.startswith('/*') or stripped.startswith('*'):
+                continue
+
+            if func_name not in line:
+                continue
+
+            # Find start of name - ensure it's a word boundary (not part of another identifier)
+            idx = line.find(func_name)
+            if idx == -1:
+                continue
+
+            # Check word boundary before (must be whitespace or start of line or non-alnum)
+            if idx > 0 and (line[idx-1].isalnum() or line[idx-1] == '_'):
+                continue
+
+            # Check word boundary after (must be '(' or whitespace)
+            after_idx = idx + len(func_name)
+            if after_idx < len(line) and line[after_idx].isalnum():
+                continue
+
+            # Check if it's a call or definition - look for (
+            rest = line[after_idx:].strip()
+            if not rest.startswith('('):
+                continue
+
+            # Check this isn't a call site (preceding text should look like return type)
+            return_type_part = line[:idx].strip()
+
+            # Skip if it looks like a call site (e.g., "if (", "return ", "= ")
+            if return_type_part.endswith(('if', 'while', 'for', 'switch', 'return', '=', '(', ',')):
+                continue
+
+            # Strip common attributes from return type
+            clean_return_type = return_type_part
+            for attr in STRIP_ATTRIBUTES:
+                # Handle __attribute__((...)) specially
+                if attr == '__attribute__':
+                    import re
+                    clean_return_type = re.sub(r'__attribute__\s*\(\([^)]*\)\)', '', clean_return_type)
+                else:
+                    clean_return_type = clean_return_type.replace(attr, '')
+            clean_return_type = ' '.join(clean_return_type.split())  # Normalize whitespace
+
+            if not clean_return_type:
+                continue
+
+            # Use line offset instead of find() to get correct position
+            line_start_offset = line_offsets[i]
+            combined_text = source_code[line_start_offset:]
+
+            # Simple parenthesis counter
+            balance = 0
+            args_end_idx = -1
+
+            # Find the first ( relative to combined_text
+            start_paren = combined_text.find('(')
+
+            if start_paren == -1:
+                continue
+
+            for j, char in enumerate(combined_text[start_paren:]):
+                if char == '(':
+                    balance += 1
+                elif char == ')':
+                    balance -= 1
+                    if balance == 0:
+                        args_end_idx = start_paren + j
+                        break
+
+            if args_end_idx != -1:
+                args_part = combined_text[start_paren:args_end_idx+1]
+
+                # Construct prototype
+                prototype_str = f"{clean_return_type} {func_name}{args_part};"
+                logger.debug(f"Extracted Signature: {prototype_str}")
+                return prototype_str
+
         return None
 
     def _save_debug_output(self, content):

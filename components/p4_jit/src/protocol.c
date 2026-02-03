@@ -95,11 +95,18 @@ int protocol_init(size_t rx_buffer_size, size_t tx_buffer_size) {
     return 0;
 }
 
+// Packet overhead: header (8 bytes) + checksum (2 bytes)
+#define PACKET_OVERHEAD 10
+
 size_t protocol_get_max_payload_size(void) {
     // Return effective max payload: minimum of protocol buffer and stream buffer
+    // Subtract packet overhead to prevent stream buffer overflow
     size_t stream_buf_size = usb_transport_get_buffer_size();
-    if (stream_buf_size > 0 && stream_buf_size < max_payload_size) {
-        return stream_buf_size;
+    size_t effective_stream = (stream_buf_size > PACKET_OVERHEAD) ?
+                              (stream_buf_size - PACKET_OVERHEAD) : 0;
+
+    if (effective_stream > 0 && effective_stream < max_payload_size) {
+        return effective_stream;
     }
     return max_payload_size;
 }
@@ -137,16 +144,22 @@ void protocol_loop(void) {
         // 3. Read Payload
         if (header.payload_len > max_payload_size) {
             ESP_LOGE(TAG, "Payload too large: %lu (max: %u)", header.payload_len, max_payload_size);
-            // Must drain payload + checksum to avoid protocol desync
-            // Read in chunks to avoid stack overflow for very large payloads
+            // Drain payload + checksum to avoid protocol desync, but cap at reasonable max
+            // to prevent blocking indefinitely on corrupted payload_len
             uint8_t drain_buf[256];
-            size_t remaining = header.payload_len + 2;  // payload + 2-byte checksum
+            size_t max_drain = max_payload_size + 2 + 1024;  // Allow some slack beyond max
+            size_t to_drain = header.payload_len + 2;
+            if (to_drain > max_drain) {
+                ESP_LOGE(TAG, "Payload len %lu appears corrupted (max drain: %u), resyncing", header.payload_len, max_drain);
+                to_drain = max_drain;
+            }
+            size_t remaining = to_drain;
             while (remaining > 0) {
                 size_t chunk = (remaining < sizeof(drain_buf)) ? remaining : sizeof(drain_buf);
                 usb_read_bytes(drain_buf, chunk);
                 remaining -= chunk;
             }
-            ESP_LOGW(TAG, "Drained %lu bytes to resync", header.payload_len + 2);
+            ESP_LOGW(TAG, "Drained %u bytes to resync", to_drain);
             continue;
         }
         if (header.payload_len > 0) {
