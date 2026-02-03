@@ -27,7 +27,7 @@ PROTOCOL_VERSION_MINOR = 0
 # Default chunk size for large transfers (64KB - header overhead)
 # Will be adjusted based on device_info['max_payload_size'] if available
 DEFAULT_CHUNK_SIZE = 64 * 1024 - 16  # Account for header overhead
-MIN_CHUNK_SIZE = 1024  # Minimum chunk size to prevent hangs
+HEADER_OVERHEAD = 16  # Space reserved for packet headers
 
 # Request flags (must match device-side REQ_FLAG_*)
 REQ_FLAG_SKIP_BOUNDS = 0x01
@@ -288,13 +288,16 @@ class DeviceManager:
 
     def _get_chunk_size(self) -> int:
         """Get optimal chunk size based on device info."""
-        chunk_size = DEFAULT_CHUNK_SIZE
         if self.device_info and 'max_payload_size' in self.device_info:
             # Use device's max payload minus header overhead
-            device_max = self.device_info['max_payload_size'] - 16
-            chunk_size = min(device_max, DEFAULT_CHUNK_SIZE)
-        # Ensure minimum chunk size to prevent hangs
-        return max(chunk_size, MIN_CHUNK_SIZE)
+            device_max = self.device_info['max_payload_size'] - HEADER_OVERHEAD
+            if device_max <= 0:
+                raise RuntimeError(
+                    f"Device max_payload_size ({self.device_info['max_payload_size']}) "
+                    f"is too small (need > {HEADER_OVERHEAD} bytes)"
+                )
+            return min(device_max, DEFAULT_CHUNK_SIZE)
+        return DEFAULT_CHUNK_SIZE
 
     def write_memory(self, address: int, data: bytes, skip_bounds: bool = False):
         """
