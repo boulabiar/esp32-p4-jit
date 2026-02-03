@@ -172,11 +172,12 @@ typedef int esp_err_t;
                 lines.append(f"        memcpy(&{param_name}, &combined, sizeof({param_name}));")
                 lines.append(f"    }}")
             else:
-                # 32-bit type
+                # 32-bit type (strict aliasing safe with memcpy)
+                lines.append(f"    {param_type} {param_name};")
                 if 'float' in param_type:
-                    lines.append(f"    {param_type} {param_name} = *(float*)&io[{slot_idx}];")
+                    lines.append(f"    memcpy(&{param_name}, &io[{slot_idx}], sizeof(float));")
                 else:
-                    lines.append(f"    {param_type} {param_name} = *({param_type}*)&io[{slot_idx}];")
+                    lines.append(f"    memcpy(&{param_name}, &io[{slot_idx}], sizeof({param_type}));")
 
             lines.append("")
 

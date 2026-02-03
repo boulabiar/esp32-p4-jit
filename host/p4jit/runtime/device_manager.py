@@ -133,13 +133,15 @@ class DeviceManager:
             logger.error(f"Response command mismatch: expected {cmd_id:02X}, got {resp_cmd:02X}")
             raise RuntimeError(f"Response command mismatch: expected {cmd_id:02X}, got {resp_cmd:02X}")
 
-        # Read Payload
+        # Read Payload (loop until all bytes received for large/slow transfers)
         resp_payload = b''
         if resp_len > 0:
-            resp_payload = self.serial.read(resp_len)
-            if len(resp_payload) != resp_len:
-                logger.error(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
-                raise RuntimeError(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
+            while len(resp_payload) < resp_len:
+                chunk = self.serial.read(resp_len - len(resp_payload))
+                if not chunk:
+                    logger.error(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
+                    raise RuntimeError(f"Timeout waiting for payload. Expected {resp_len}, got {len(resp_payload)}")
+                resp_payload += chunk
 
         # Read Checksum
         resp_checksum_data = self.serial.read(2)

@@ -176,15 +176,27 @@ class BinaryObject:
                 return func['address']
         return None
         
+    def _parse_size(self, size_str):
+        """Parse size string like '128K' to bytes."""
+        size_str = str(size_str).strip().upper()
+        if size_str.endswith('K'):
+            return int(size_str[:-1]) * 1024
+        elif size_str.endswith('M'):
+            return int(size_str[:-1]) * 1024 * 1024
+        else:
+            return int(size_str)
+
     def validate(self):
         """Validate binary integrity."""
         if self._base_address % 4 != 0:
             raise ValueError("Base address not 4-byte aligned")
-            
-        if self.total_size > 128 * 1024:
-            raise ValueError("Binary exceeds 128KB limit")
-            
+
+        # Use configured max_size instead of hardcoded value
+        max_size = self._parse_size(self._config['memory']['max_size'])
+        if self.total_size > max_size:
+            raise ValueError(f"Binary exceeds {max_size} byte limit (actual: {self.total_size})")
+
         if self.get_function_address(self._entry_point) is None:
             raise ValueError(f"Entry point '{self._entry_point}' not found")
-            
+
         return True
